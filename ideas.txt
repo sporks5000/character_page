@@ -1,0 +1,315 @@
+Table1: three columns - compares the URI to a post number
+	an incrimenting number (just serving as a key)
+	a URI
+	a number (not necessarily incrimenting)
+Table2: two columns - the json that we'll be working from for each post
+	a number that corralates to table1
+	a JSON value with categories and content items for those categories
+Table3: six columns - the details for an item
+	an incrimenting number (just serving as a key)
+	the name of a content item
+	the page number
+	the name that will be displayed for that item
+	an image url
+	a description in JSON.
+Table4: ten columns - styles and layouts
+	an incrimenting number (just serving as a key)
+	the type of style it is ("full", "section", "single")
+	the name of the style
+	the page number
+	the name of the style that should be followed in links from this page (only applicable for full page styles)
+	the start content for that style
+	the end content for that style
+	single item (or middle) content for that style (in JSON format for section and single-item, in html for full page)
+	JSON for creating a "previous" link (only for types "section", "single")
+	JSON for creating a "next" link (only for type "single")
+
+
+
+Example JSON from table2:
+[
+	"style1",
+	[
+		"characters",
+		"bina",
+		"gregor"
+	],[
+		"settings",
+		"laundry"
+	],[
+		"art_style",
+		"pixelated"
+	]
+]
+
+
+
+The JSON for table 3 will allow a few things that would be difficult to accomplish otherwise:
+1) links to other pages will have to be interpreted differently based on how the data is accessed
+2) I want to make a way for there to be collapsable and expandable text, but on a single item view, it should always be expanded. Also, I don't want you to be able to colapse inside a colapse.
+3) there's no reason why I can't use standard html formatting in-line with this. So <b> and <i> tags should still function
+
+
+
+Example JSON from table3:
+[
+	[
+		"html",
+		"<p>The thing that you have to understand about Bina is that she's <b>awesome</b>.</p><p>Bina has a dog living in her head.</p><p><span class=\"strike\">His</span> Her name is "
+	],[
+		"link",
+		"piotyr",
+		"Piotyr"
+	],[
+		"html",
+		", and she's a good girl."
+	],[
+		"expand",
+		"Bina's arm",
+		[
+			"html",
+			"<p>Bina has a magical woowoo arm that gives her ",
+		],[
+			"link',
+			"botfly",
+			"botfly"
+		],[
+			"html",
+			" timetraveling powers"
+		]
+	]
+]
+Note: there can be as many items in the array as you want
+Note: the expand section can include additional links, but not additional expands
+
+
+
+The middle portion "section" and "single item" styles will be in JSON to allow inserting the following data:
+1) The display name
+2) The image
+3) The content text
+4) Whether the "next" button should be displayed (single item only)
+5) Whether the "previous" button should be displayed.
+
+
+
+Example JSON from table4:
+[
+	"<b>",
+	"DISP_NAME",
+	"</b><br /><br /><img src=\"",
+	"IMAGE",
+	"\" /><br /><br />",
+	"CONTENT",
+	"<br><a style=\"display:",
+	"DISPLAY_LAST",
+	";margin-left:20px\"><img src=\"next.gif\" /></a>"
+]
+Note: there can be as many items in the array as you want
+
+
+
+Updated JSON for table4:
+[
+	[
+		"html",
+		"<tr><th colspan=\"2\" style=\"text-align:left;\">"
+	],[
+		"var",
+		"DISP_NAME"
+	],[
+		"html",
+		"</th></tr><tr><td><img src=\""
+	],[
+		"var",
+		"IMAGE"
+	],[
+		"html",
+		"\"><div style=\"text-align:center;margin:auto;padding-top:5px;\">"
+	],[
+		"var",
+		"LAST_LINK"
+	],[
+		"html",
+		"</div></td><td style=\"padding-left:10px;\">"
+	],[
+		"var",
+		"CONTENT"
+	],[
+		"html",
+		"</td></tr>"
+	]
+]
+
+
+
+
+
+
+
+So - Assuming that the requesting URL is "http://www.all-night-laundry.com/post/8", and the base URL is "http://www.all-night-laundry.com/post/"...
+
+1) The php file interprets the post name as "8", which (since the comic doesn't have a second post) will correlate with post number 7.
+2) A request is made against table2 for the highest entry that is less than or equal to 7. the characters and setting haven't changed since post 3, it it gets the JSON for post 3
+3) the first item in the JSON is the style, a request is made for it and the beginning, middle, and end are pulled
+4) It starts generating the HTML with the beginning of the style
+5) for each other item in the array..
+	request the category, get the beginning middle and end
+	add the category beginning to the html
+	for each other item in the array...
+		request the item and page number, as well as the iteration of that item immediately before
+		if only one item is returned
+			don't display the "last" button
+		parse the markdown for the item in question
+		assemble the html for the item by using the category middle
+		add it to the html
+	if there is another item in the style
+		add the html for the style middle
+6) add the style end to the html
+7) output the html
+
+
+
+I will also need a separate page that just serves a single item. This page will almost always be loaded into an iframe on the main page. within the php code, there will have to be a variable that states a default single item style if none is specified.
+
+0) the link in markdown will will be parsed and expanded such that the get data will include an item name, the requesting page number, the requested page number, a single-item style, and an orientation from the requested page number ("next" or "last" - if I request page 123 and "last", it will find the version immediately previous to page 123)
+1) the php file requests the single item style and page number and gets the beginning, middle, and end.
+2) if there is no orientation, 
+	the php file requests the item and the page specified as well as the ones before and after it.
+else if the orientation is next
+	the php file requests the item and page specified as well as the two pages after it
+else if the orientation is last
+	the php file requests the item and page specified as well as the two pages before it
+3) if the highest number page is equal to or greater than the requesting page
+	There is no "next" button
+4) if the lowest number page is equal to the requested page
+	There is no "last" button
+5) use the style beginning to start creating the html content
+6) use the style middle and the item markdown to add to the content
+7) use the style end to finish the markdown
+8) output html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Table1 (cp_names): three columns - compares the URI to a post number
+	an incrimenting number (just serving as a key)
+	a URI
+	a number (not necessarily incrimenting)
+Table2 (cp_contents): two columns - the json that we'll be working from for each post
+	a number that corralates to table1
+	a JSON value with categories and content items for those categories
+Table3 (cp_items): six columns - the details for an item
+	an incrimenting number (just serving as a key)
+	the name of a content item
+	the page number
+	JSON block for data for that item.
+Table4 (cp_styles): ten columns - styles and layouts
+	an incrimenting number (just serving as a key)
+	the type of style it is ("full", "section", "single")
+	the name of the style
+	the page number
+	JSON block for that style
+Table5 (cp_types):
+	an incrimenting number (just serving as a key)
+	an item name
+	the type of item it is (e.g. "character", "setting")
+
+
+
+where possible, all entries that produce actual content should be done in JSON. This allows us to set a data type for each component.
+
+Data that contributes to the body:
+* html - an actual block of HTML content that will be read straight into the output
+* var - an internal variable used by the script (list below)
+* ilink - an item name and link text that will be converted into a link that opens the iframe
+* link - just an item name to convert into a url
+* not_first - (only in "section" and "full") Apply this to all items but the first
+* not_last - (only in  "section" and "full") Apply this to all items but the last
+* is_first - (only in "section" and "full") Apply this only to the first item
+* is_last - (only in  "section" and "full") Apply this only to the last item
+* is_prev - (only in "single" and "section") data that only appears if there's a previous item
+* is_next - (only in "single") data that only appears if there's a next item
+* no_prev - (only in "single" and "section") data that only appears if there is no previous item
+* no_next - (only in "single") data that only appears if there is no next item
+
+Data that contributes, but not directly:
+* alternate - (only in "section" and "full") contains multiple blocks, for each additional section or item rotate through those blocks
+* iframe - (only in "full") a block that defines the iframe for links
+
+Special data for items (must be listed before anything else):
+* disp_name - (only for items) The display name of the item
+* disp_image - (only for items) The image url for an item
+* first_url - url from source of their first appearance
+
+Data that contribtes to the head:
+* head - html that belongs in the head of the document
+
+Data that doesn't contribte:
+* comment - a section that is not interpreted by the parser
+
+
+Internal Variables:
+
+* DISP_NAME - The display name of an item (note, there's no rreason why this cannot contain html)
+* IMAGE - the image url for an item
+* FIRST_URL - the URL from the source for the character's first apeparance
+* NEXT_URL - The URL for the next version of this item
+* PREV_URL - the URL for the previous version of this item
+* SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
+* CONTENT - the next level of content in the "full"->"section"->"item" chain, or the iframe for "full" styles that single pages will go into.
+* SOURCE_URL - the URL of the source page that this page is referencing
+* MAIN_URL - the URL for the main page of the site
+* SECT_NUM - the number of the current section (starting with one)
+* ITEM_NUM - The number of the current item in the current section (starting with one)
+
+...of course, this makes everything different.
+
+
+Example JSON from cp_item:
+[
+	"style_full1",
+	"style_single1",
+	[
+		"style_section1",
+		"characters",
+		"bina",
+		"gregor"
+	],[
+		"style_section1",
+		"settings",
+		"laundry"
+	],[
+		"style_section1",
+		"art_style",
+		"pixelated"
+	]
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
