@@ -1,0 +1,108 @@
+>>>>> declare style style1_full 1 full
+>>> single style1_single
+>>> head start
+	<title>All Night Laundry - Characters and Locations</title>
+	<style>
+		h2 {margin-top:5px;}
+	</style>
+>>> head end
+<body style="background-color:#222222;margin:0px;text-align:center;">
+	<div style="width:840px;background-color:#f8f8f8;margin:auto;min-height:100%">
+		<div id="title">
+			<h1 style="padding-top:5px;">All Night Laundry - Characters and Locations</h1>
+		</div>
+		<div id="content" style="margin-left:10px;margin-right:10px;">
+>>> repeat start
+>>> content
+>>> not_last start
+			<br /><hr /><br />
+>>> not_last end
+>>> repeat end
+		</div>
+	</div>
+>>> iframe start
+<!-- ##### Something should go here -->
+>>> iframe end
+
+
+>>>>> declare style style1_section 1 section
+			<div id="section_
+>>> var SECT_NUM
+">
+				<h2>
+>>> var SECTION_NAME
+</h2>
+				<table>
+<!-- Shifting indent -->
+>>> repeat start
+	<tr>
+		<th colspan="2" style="text-align:left;">
+>>> var DISP_NAME
+</th>
+	</tr>
+	<tr>
+		<td>
+			<img src="
+>>> var IMAGE
+" />
+>>> is_prev start
+			<div style="text-align:center;margin:auto;padding-top:5px;">
+>>> plink &lt;-- prev				
+			</div>
+>>> is_prev end
+		</td>
+		<td style="padding-left:10px;">
+>>> content
+		</td>
+	</tr>
+>>> repeat end
+<!-- Unshifting indent -->
+				</table>
+			</div>
+
+
+>>>>> declare content 2
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+
+
+>>>>> declare name 1 1
+>>>>> declare name 2 2
+>>>>> declare name 3 3
+>>>>> declare name 4 4
+>>>>> declare name 5 5
+
+
+>>>>> declare item bina 2
+>>> disp_name Bina
+>>> disp_image images/bina1.png
+>>> description start
+<p>Bina is tired and kind of fuzzy. She was held up at work and she's out of clean clothes.</p>
+>>> description end
+
+>>>>> declare item laundry 2
+>>> disp_name 24h Laundry
+>>> disp_image images/laundry1.png
+>>> description start
+<p>The laundromat is dark and quiet. It should be open, but the lights inside are off.</p>
+>>> description end
+
+>>>>> declare item pixelated 2
+>>> disp_name "Pixelated"
+>>> disp_image images/pixelated1.png
+>>> description start
+<p>This art style is used repeatedly throughout the comic for the interior of the laundromat. Here it runs from page 2 to page 26.</p>
+>>> description end
+
+
+>>>>> declare type bina character
+>>>>> declare type laundry setting
+>>>>> declare type pixelated art_style

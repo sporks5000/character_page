@@ -207,22 +207,22 @@ else if the orientation is last
 Table1 (cp_names): three columns - compares the URI to a post number
 	an incrimenting number (just serving as a key)
 	a URI
-	a number (not necessarily incrimenting)
+	a page number (not necessarily incrimenting)
 Table2 (cp_contents): two columns - the json that we'll be working from for each post
 	a number that corralates to table1
 	a JSON value with categories and content items for those categories
-Table3 (cp_items): six columns - the details for an item
+Table3 (cp_items): four columns - the details for an item
 	an incrimenting number (just serving as a key)
 	the name of a content item
 	the page number
 	JSON block for data for that item.
-Table4 (cp_styles): ten columns - styles and layouts
+Table4 (cp_styles): five columns - styles and layouts
 	an incrimenting number (just serving as a key)
 	the type of style it is ("full", "section", "single")
 	the name of the style
 	the page number
 	JSON block for that style
-Table5 (cp_types):
+Table5 (cp_types): three columns - what type of item each item is
 	an incrimenting number (just serving as a key)
 	an item name
 	the type of item it is (e.g. "character", "setting")
@@ -246,10 +246,11 @@ Data that contributes to the body:
 * no_next - (only in "single") data that only appears if there is no next item
 
 Data that contributes, but not directly:
-* alternate - (only in "section" and "full") contains multiple blocks, for each additional section or item rotate through those blocks
+* repeat - (only in "section" and "full") can contain multiple blocks, for each additional section or item rotate through those blocks
 * iframe - (only in "full") a block that defines the iframe for links
 
 Special data for items (must be listed before anything else):
+* int_name - (only for items) The name used internally to reference this item
 * disp_name - (only for items) The display name of the item
 * disp_image - (only for items) The image url for an item
 * first_url - url from source of their first appearance
@@ -262,7 +263,7 @@ Data that doesn't contribte:
 
 
 Internal Variables:
-
+* INT_NAME - The name used internally to reference this item
 * DISP_NAME - The display name of an item (note, there's no rreason why this cannot contain html)
 * IMAGE - the image url for an item
 * FIRST_URL - the URL from the source for the character's first apeparance
@@ -284,16 +285,16 @@ Example JSON from cp_item:
 	"style_single1",
 	[
 		"style_section1",
-		"characters",
+		"Characters",
 		"bina",
 		"gregor"
 	],[
 		"style_section1",
-		"settings",
+		"Settings",
 		"laundry"
 	],[
 		"style_section1",
-		"art_style",
+		"Art Style",
 		"pixelated"
 	]
 ]
@@ -305,7 +306,81 @@ Example JSON from cp_item:
 
 
 
+Instead of storing everything in JSON, lets store it in plain text. That will be easier to work with. Special data types will begin with ">>>" all lines will be chacked for that and if it's not present, they'll be dumped directly to the HTML.
 
+Things that I'll have to parse for:
+* keyword
+* keyword word
+* keyword string
+* keyword word number <- JUST "var ITEM_DATA"
+* keyword word string <- JUST "ilink"
+
+Single items:
+* >>> var [VARIABLE] - a variable to be interpreted by the script
+* >>> comment [TEXT] - a comment that won't be interpreted y the parser
+* >>> link [ITEM NAME] - an item name to convert into a URL
+* >>> ilink [ITEM NAME] [TEXT] - Convert this to a link that will be opened in the iframe
+* >>> plink [TEXT] - Convert this to a link for the previous version of the current item
+* >>> nlink [TEXT] - Convert this to a link for the next version of the current item
+* >>> content - the next level of content in the "full"->"section"->"item" chain, or the iframe for "full" styles that single pages will go into. (in "full" styles, the "content" call is where the script will request the content for the next section, so it NEEDS to be present, even if you know that there will only be one section)
+
+Indicate start or end positions
+* >>> repeat ["start" OR "end"] - (only in "section" and "full") Everything in between repeats for each section or item (if multiple starts are present before an end, they will be used in sequence and loop until all sections or items have been used) (in "section" styles, the "repeat" call is when the script will request the content for the next item, so it NEEDS to be present, even if you know that there will only be one item).
+* >>> not_first ["start" OR "end"] - (only in "section" and "full") Apply this to all items but the first
+* >>> not_last ["start" OR "end"] - (only in  "section" and "full") Apply this to all items but the last
+* >>> is_first ["start" OR "end"] - (only in "section" and "full") Apply this only to the first item
+* >>> is_last ["start" OR "end"] - (only in  "section" and "full") Apply this only to the last item
+* >>> is_prev ["start" OR "end"] - (only in "single" and "section") data that only appears if there's a previous item
+* >>> is_next ["start" OR "end"] - (only in "single") data that only appears if there's a next item
+* >>> no_prev ["start" OR "end"] - (only in "single" and "section") data that only appears if there is no previous item
+* >>> no_next ["start" OR "end"] - (only in "single") data that only appears if there is no next item
+* >>> head ["start" OR "end"] - indicates a section that goes into the header
+* >>> iframe ["start" OR "end"] - indicates a section that goes into the div that surrounds the iframe
+* >>> description ["start" OR "end"] - indicates the description for an item
+
+Special data for items (must be listed before anything else):
+* >>> disp_name - (only for items) The display name of the item
+* >>> disp_image - (only for items) The image url for an item
+* >>> item_data - (only for items) a varaible that can be used to store data about the item. Multiple of these can be used; they will be stored in an array
+
+Special data for full page styles
+* >>> single [NAME] - declare the single image style that should be used for the iframe
+
+special data for content:
+* >>> style - the style for the page (should be declared before any styles or items)
+* >>> s_name - the name of the upcoming section (should be declared before the style) (There's no reason that this cannot contain any length of text or html)
+* >>> s_style - the style of the upcoming section
+* >>> item - an item within the section
+
+Other special data (begins with ">>>>> "):
+* >>>>> declare style [NAME] [PAGE] [TYPE]
+* >>>>> declare name [URL] [PAGE]
+* >>>>> declare content [PAGE]
+* >>>>> declare item [NAME] [PAGE]
+* >>>>> declare type [NAME] [TYPE]
+
+Other:
+* Anything that needs to be parsed as plain html doesn't need to be preceeded with anything
+* The following tags will be added programatically <head> </head> </body> <html> </html>
+* Also, immediately after the <head> tag, some script stuff will be added
+
+Note: The following types need to make sure that a newline character is not input either before or after them:
+* var
+* link
+
+
+Internal Variables:
+* ITEM_NAME - The name used internally to reference this item
+* DISP_NAME - The display name of an item (note, there's no rreason why this cannot contain html)
+* IMAGE - the image url for an item
+* ITEM_DATA [NUMBER (starting with 1)] - Other data for the item, stored as an array
+* NEXT_URL - The URL for the next version of this item
+* PREV_URL - the URL for the previous version of this item
+* SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
+* SOURCE_URL - the URL of the source page that this page is referencing
+* MAIN_URL - the URL for the main page of the site
+* SECT_NUM - the number of the current section (starting with one)
+* ITEM_NUM - The number of the current item in the current section (starting with one)
 
 
 
