@@ -83,28 +83,28 @@
 
 >>>>> declare item bina 2
 >>> disp_name Bina
->>> disp_image images/bina1.png
+>>> disp_image ../images/bina1.png
 >>> description start
 <p>Bina is tired and kind of fuzzy. She was held up at work and she's out of clean clothes.</p>
 >>> description end
 
 >>>>> declare item laundry 2
 >>> disp_name 24h Laundry
->>> disp_image images/laundry1.png
+>>> disp_image ../images/laundry1.png
 >>> description start
 <p>The laundromat is dark and quiet. It should be open, but the lights inside are off.</p>
 >>> description end
 
 >>>>> declare item laundry 3
 >>> disp_name 24h Laundry
->>> disp_image images/laundry2.png
+>>> disp_image ../images/laundry2.png
 >>> description start
 <p>The laundromat is dark and quiet. The door is unlocked, but the lights inside are off.</p>
 >>> description end
 
 >>>>> declare item pixelated 2
 >>> disp_name "Pixelated"
->>> disp_image images/pixelated1.png
+>>> disp_image ../images/pixelated1.png
 >>> description start
 <p>This art style is used repeatedly throughout the comic for the interior of the laundromat. Here it runs from page 2 to page 26.</p>
 >>> description end

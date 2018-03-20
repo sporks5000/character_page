@@ -1,152 +1,3 @@
-Table1: three columns - compares the URI to a post number
-	an incrimenting number (just serving as a key)
-	a URI
-	a number (not necessarily incrimenting)
-Table2: two columns - the json that we'll be working from for each post
-	a number that corralates to table1
-	a JSON value with categories and content items for those categories
-Table3: six columns - the details for an item
-	an incrimenting number (just serving as a key)
-	the name of a content item
-	the page number
-	the name that will be displayed for that item
-	an image url
-	a description in JSON.
-Table4: ten columns - styles and layouts
-	an incrimenting number (just serving as a key)
-	the type of style it is ("full", "section", "single")
-	the name of the style
-	the page number
-	the name of the style that should be followed in links from this page (only applicable for full page styles)
-	the start content for that style
-	the end content for that style
-	single item (or middle) content for that style (in JSON format for section and single-item, in html for full page)
-	JSON for creating a "previous" link (only for types "section", "single")
-	JSON for creating a "next" link (only for type "single")
-
-
-
-Example JSON from table2:
-[
-	"style1",
-	[
-		"characters",
-		"bina",
-		"gregor"
-	],[
-		"settings",
-		"laundry"
-	],[
-		"art_style",
-		"pixelated"
-	]
-]
-
-
-
-The JSON for table 3 will allow a few things that would be difficult to accomplish otherwise:
-1) links to other pages will have to be interpreted differently based on how the data is accessed
-2) I want to make a way for there to be collapsable and expandable text, but on a single item view, it should always be expanded. Also, I don't want you to be able to colapse inside a colapse.
-3) there's no reason why I can't use standard html formatting in-line with this. So <b> and <i> tags should still function
-
-
-
-Example JSON from table3:
-[
-	[
-		"html",
-		"<p>The thing that you have to understand about Bina is that she's <b>awesome</b>.</p><p>Bina has a dog living in her head.</p><p><span class=\"strike\">His</span> Her name is "
-	],[
-		"link",
-		"piotyr",
-		"Piotyr"
-	],[
-		"html",
-		", and she's a good girl."
-	],[
-		"expand",
-		"Bina's arm",
-		[
-			"html",
-			"<p>Bina has a magical woowoo arm that gives her ",
-		],[
-			"link',
-			"botfly",
-			"botfly"
-		],[
-			"html",
-			" timetraveling powers"
-		]
-	]
-]
-Note: there can be as many items in the array as you want
-Note: the expand section can include additional links, but not additional expands
-
-
-
-The middle portion "section" and "single item" styles will be in JSON to allow inserting the following data:
-1) The display name
-2) The image
-3) The content text
-4) Whether the "next" button should be displayed (single item only)
-5) Whether the "previous" button should be displayed.
-
-
-
-Example JSON from table4:
-[
-	"<b>",
-	"DISP_NAME",
-	"</b><br /><br /><img src=\"",
-	"IMAGE",
-	"\" /><br /><br />",
-	"CONTENT",
-	"<br><a style=\"display:",
-	"DISPLAY_LAST",
-	";margin-left:20px\"><img src=\"next.gif\" /></a>"
-]
-Note: there can be as many items in the array as you want
-
-
-
-Updated JSON for table4:
-[
-	[
-		"html",
-		"<tr><th colspan=\"2\" style=\"text-align:left;\">"
-	],[
-		"var",
-		"DISP_NAME"
-	],[
-		"html",
-		"</th></tr><tr><td><img src=\""
-	],[
-		"var",
-		"IMAGE"
-	],[
-		"html",
-		"\"><div style=\"text-align:center;margin:auto;padding-top:5px;\">"
-	],[
-		"var",
-		"LAST_LINK"
-	],[
-		"html",
-		"</div></td><td style=\"padding-left:10px;\">"
-	],[
-		"var",
-		"CONTENT"
-	],[
-		"html",
-		"</td></tr>"
-	]
-]
-
-
-
-
-
-
-
 So - Assuming that the requesting URL is "http://www.all-night-laundry.com/post/8", and the base URL is "http://www.all-night-laundry.com/post/"...
 
 1) The php file interprets the post name as "8", which (since the comic doesn't have a second post) will correlate with post number 7.
@@ -204,100 +55,7 @@ else if the orientation is last
 
 
 
-Table1 (cp_names): three columns - compares the URI to a post number
-	an incrimenting number (just serving as a key)
-	a URI
-	a page number (not necessarily incrimenting)
-Table2 (cp_contents): two columns - the json that we'll be working from for each post
-	a number that corralates to table1
-	a JSON value with categories and content items for those categories
-Table3 (cp_items): four columns - the details for an item
-	an incrimenting number (just serving as a key)
-	the name of a content item
-	the page number
-	JSON block for data for that item.
-Table4 (cp_styles): five columns - styles and layouts
-	an incrimenting number (just serving as a key)
-	the type of style it is ("full", "section", "single")
-	the name of the style
-	the page number
-	JSON block for that style
-Table5 (cp_types): three columns - what type of item each item is
-	an incrimenting number (just serving as a key)
-	an item name
-	the type of item it is (e.g. "character", "setting")
 
-
-
-where possible, all entries that produce actual content should be done in JSON. This allows us to set a data type for each component.
-
-Data that contributes to the body:
-* html - an actual block of HTML content that will be read straight into the output
-* var - an internal variable used by the script (list below)
-* ilink - an item name and link text that will be converted into a link that opens the iframe
-* link - just an item name to convert into a url
-* not_first - (only in "section" and "full") Apply this to all items but the first
-* not_last - (only in  "section" and "full") Apply this to all items but the last
-* is_first - (only in "section" and "full") Apply this only to the first item
-* is_last - (only in  "section" and "full") Apply this only to the last item
-* is_prev - (only in "single" and "section") data that only appears if there's a previous item
-* is_next - (only in "single") data that only appears if there's a next item
-* no_prev - (only in "single" and "section") data that only appears if there is no previous item
-* no_next - (only in "single") data that only appears if there is no next item
-
-Data that contributes, but not directly:
-* repeat - (only in "section" and "full") can contain multiple blocks, for each additional section or item rotate through those blocks
-* iframe - (only in "full") a block that defines the iframe for links
-
-Special data for items (must be listed before anything else):
-* int_name - (only for items) The name used internally to reference this item
-* disp_name - (only for items) The display name of the item
-* disp_image - (only for items) The image url for an item
-* first_url - url from source of their first appearance
-
-Data that contribtes to the head:
-* head - html that belongs in the head of the document
-
-Data that doesn't contribte:
-* comment - a section that is not interpreted by the parser
-
-
-Internal Variables:
-* INT_NAME - The name used internally to reference this item
-* DISP_NAME - The display name of an item (note, there's no rreason why this cannot contain html)
-* IMAGE - the image url for an item
-* FIRST_URL - the URL from the source for the character's first apeparance
-* NEXT_URL - The URL for the next version of this item
-* PREV_URL - the URL for the previous version of this item
-* SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
-* CONTENT - the next level of content in the "full"->"section"->"item" chain, or the iframe for "full" styles that single pages will go into.
-* SOURCE_URL - the URL of the source page that this page is referencing
-* MAIN_URL - the URL for the main page of the site
-* SECT_NUM - the number of the current section (starting with one)
-* ITEM_NUM - The number of the current item in the current section (starting with one)
-
-...of course, this makes everything different.
-
-
-Example JSON from cp_item:
-[
-	"style_full1",
-	"style_single1",
-	[
-		"style_section1",
-		"Characters",
-		"bina",
-		"gregor"
-	],[
-		"style_section1",
-		"Settings",
-		"laundry"
-	],[
-		"style_section1",
-		"Art Style",
-		"pixelated"
-	]
-]
 
 
 
@@ -307,13 +65,6 @@ Example JSON from cp_item:
 
 
 Instead of storing everything in JSON, lets store it in plain text. That will be easier to work with. Special data types will begin with ">>>" all lines will be chacked for that and if it's not present, they'll be dumped directly to the HTML.
-
-Things that I'll have to parse for:
-* keyword
-* keyword word
-* keyword string
-* keyword word number <- JUST "var ITEM_DATA"
-* keyword word string <- JUST "ilink"
 
 Single items:
 * >>> var [VARIABLE] - a variable to be interpreted by the script
@@ -359,10 +110,12 @@ Other special data (begins with ">>>>> "):
 * >>>>> declare item [NAME] [PAGE]
 * >>>>> declare type [NAME] [TYPE]
 
-Other:
+Other Rules:
 * Anything that needs to be parsed as plain html doesn't need to be preceeded with anything
 * The following tags will be added programatically <head> </head> </body> <html> </html>
 * Also, immediately after the <head> tag, some script stuff will be added
+* All styles and item names will have to have internal names without spaces, given that the parsing is done based on whitespace.
+* The full page version should nevver reference the next URL; to avoid spoilers, the source page is always treated as if it's the latest page.
 
 Note: The following types need to make sure that a newline character is not input either before or after them:
 * var
@@ -374,11 +127,9 @@ Internal Variables:
 * DISP_NAME - The display name of an item (note, there's no rreason why this cannot contain html)
 * IMAGE - the image url for an item
 * ITEM_DATA [NUMBER (starting with 1)] - Other data for the item, stored as an array
-* NEXT_URL - The URL for the next version of this item
-* PREV_URL - the URL for the previous version of this item
 * SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
 * SOURCE_URL - the URL of the source page that this page is referencing
-* MAIN_URL - the URL for the main page of the site
+* MAIN_URL - the URL for the main page of this site (not the source site)
 * SECT_NUM - the number of the current section (starting with one)
 * ITEM_NUM - The number of the current item in the current section (starting with one)
 

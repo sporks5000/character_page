@@ -11,11 +11,18 @@ define('REFERER_BASE','www.all-night-laundry.com/post/');
 define('PROTOCOL','http');
 // What's the base URI for this page? This will usually be "/"
 define('BASE_URI','/aln/');
+// What table prefix will the database use for table names
+define('TABLE_PREFIX', 'cp_');
+// the posts can be in a subdirectory of this
+define('POST_DIR', 'posts/');
 
 if ( $_SERVER['HTTP_HOST'] == "sporks5000.com" ) {
-	define('TABLE_PREFIX', 'cp_');
+	// With this, we can have multiple domains pointed at the same docroot but showing different content
+} elseif ( $_SERVER['HTTP_HOST'] == "www.sporks5000.com" ) {
+	// This can be replicated as many times as needed for as much content as you want to cover
 } else {
-	define('TABLE_PREFIX', 'cp_');
+	// Any of the above define statements can be moved out of the above section and replicated into all of the sections here with different values as needed
+	// However, if we're defining different prefixes for each one, then the database connectivity data can remain the same.
 }
 
 function fn_parse_content ( $a_content_list ) {
@@ -60,8 +67,11 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_current_item = '';
 	static $v_disp_name = '';
 	static $v_disp_image = '';
+	static $v_last_section = '';
+	static $v_last_item = '';
 	static $a_item_data = array();
 	static $v_previous_page = '';
+	static $v_single_style = '';
 	static $b_head = false;
 	static $b_description = false;
 	static $b_iframe = false;
@@ -71,6 +81,11 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	global $o_mysql_connection;
 	global $o_content;
 	global $v_page;
+	global $v_source_url;
+	global $v_main_page;
+
+	$v_last_section = ( count( $o_content ) - 1 );
+
 	$c_lines = 0;
 	while ( $c_lines < count( $a_content_list ) ) {
 		$v_line = $a_content_list[$c_lines];
@@ -87,18 +102,15 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "var" ) {
 				if ( $b_head ) {
-					$v_head = substr( $v_head, 0, -1 );
 					$out =& $v_head;
 				} elseif ( $b_description ) {
-					$v_description = substr( $v_description, 0, -1 );
 					$out =& $v_description;
 				} elseif ( $b_iframe ) {
-					$v_iframe = substr( $v_iframe, 0, -1 );
 					$out =& $v_iframe;
 				} else {
-					$v_body = substr( $v_body, 0, -1 );
 					$out =& $v_body;
 				}
+				$out = substr( $out, 0, -1 );
 				if ( $a_match[4] == "ITEM_NAME" ) {
 					$out .= $v_current_item;
 				} elseif ( $a_match[4] == "DISP_NAME" ) {
@@ -106,12 +118,13 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} elseif ( $a_match[4] == "IMAGE" ) {
 					$out .= $v_disp_image;
 				} elseif ( $a_match[4] == "ITEM_DATA" ) {
-				} elseif ( $a_match[4] == "NEXT_URL" ) {
-				} elseif ( $a_match[4] == "PREV_URL" ) {
+					#####
 				} elseif ( $a_match[4] == "SECTION_NAME" ) {
 					$out .= $v_section_name;
 				} elseif ( $a_match[4] == "SOURCE_URL" ) {
+					$out .= $v_source_url;
 				} elseif ( $a_match[4] == "MAIN_URL" ) {
+					$out .= $v_main_page;
 				} elseif ( $a_match[4] == "SECT_NUM" ) {
 					$out .= $c_sections;
 				} elseif ( $a_match[4] == "ITEM_NUM" ) {
@@ -136,6 +149,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$v_body .= $v_description;
 				}
 			} elseif ( $a_match[1] == "ilink" ) {
+				##### This one's actually easier as this link will be based off of the current page number rather than finding a next or previous number.
 			} elseif ( $a_match[1] == "plink" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
@@ -146,6 +160,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} else {
 					$out =& $v_body;
 				}
+				##### This is not a finished product
 				$out .= '<a href="' . $v_previous_page . '">' . $a_match[3] . "</a>\n";
 				unset( $out );
 			} elseif ( $a_match[1] == "repeat" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
@@ -166,6 +181,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					}
 				} else {
 					$c_item_contents = 0;
+					$v_last_item = ( count( $o_content[$c_sections] ) - 3 );
 					foreach ( $o_content[$c_sections] as &$_current_item ) {
 						if ( $c_item_contents < 2 ) {
 							$c_item_contents++;
@@ -180,7 +196,6 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 							exit;
 						} elseif ( $o_results->num_rows >= "2" ) {
 							$b_is_prev = true;
-							##### I also need to get the page number for the previous page here.
 						} else {
 							$b_is_prev = false;
 						}
@@ -206,20 +221,37 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$b_iframe = false;
 				}
 			} elseif ( $a_match[1] == "nlink" ) {
+				#####
 			} elseif ( $a_match[1] == "comment" ) {
 				// no nothing
 			} elseif ( $a_match[1] == "not_first" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				#####
+				if ( $v_type == "full" && $c_sections != 0 ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				} elseif ( ( $c_item_contents - 2 ) != 0 ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				}
 			} elseif ( $a_match[1] == "not_last" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				#####
+				if ( $v_type == "full" && $c_sections != $v_last_section ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				} elseif ( ( $c_item_contents - 2 ) != $v_last_item ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				}
 			} elseif ( $a_match[1] == "is_first" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				#####
+				if ( $v_type == "full" && $c_sections == 0 ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				} elseif ( ( $c_item_contents - 2 ) == 0 ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				}
 			} elseif ( $a_match[1] == "is_last" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				#####
+				if ( $v_type == "full" && $c_sections == $v_last_section ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				} elseif ( ( $c_item_contents - 2 ) == $v_last_item ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				}
 			} elseif ( $a_match[1] == "is_prev" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "single" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 				if ( $b_is_prev ) {
@@ -230,7 +262,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				#####
 			} elseif ( $a_match[1] == "no_prev" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "single" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				#####
+				if ( $b_is_prev ) {
+					fn_parse_descriptions( $a_out, $v_type );
+				}
 			} elseif ( $a_match[1] == "no_next" && $a_match[4] == "start" && $v_type == "single" ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 				#####
@@ -248,21 +282,19 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				array_push( $a_item_data, $a_match[3] );
 				##### should be done, but I have not tested this yet
 			} elseif ( $a_match[1] == "single" && $v_type = "full" ) {
+				$v_single_style = $a_match[3];
 			} elseif ( $a_match[1] == "link" ) {
 				$v_target_item = $a_match[4];
 				if ( $b_head ) {
-					$v_head = substr( $v_head, 0, -1 );
 					$out =& $v_head;
 				} elseif ( $b_description ) {
-					$v_description = substr( $v_description, 0, -1 );
 					$out =& $v_description;
 				} elseif ( $b_iframe ) {
-					$v_iframe = substr( $v_iframe, 0, -1 );
 					$out =& $v_iframe;
 				} else {
-					$v_body = substr( $v_body, 0, -1 );
 					$out =& $v_body;
 				}
+				$out = substr( $out, 0, -1 );
 				$link = "##### generate a real link to " . $v_target_item . " here";
 				$out .= $link;
 				unset( $out );
@@ -312,32 +344,36 @@ function fn_extract_lines( $a_lines, $c_lines, $v_type ) {
 	return array( $a_out, $c_lines );
 }
 
+// determine the main page for the site (not the source)
+$v_prot = 'http';
+if ( isset( $_SERVER['HTTPS'] ) ) {
+	$v_prot .= 's';
+}
+$v_main_page = $v_prot . '://' . $_SERVER['HTTP_HOST'] . BASE_URI;
+
 // Determine the page URI
 $v_rewrite = false;
 $v_source_uri = '';
-if ( ! empty( $_GET['page'] ) ) {
-	$v_source_uri = $_GET['page'];
+if ( ! empty( $_GET['uri'] ) ) {
+	// if the URL has "?uri=" appended to it
+	$v_source_uri = $_GET['uri'];
 	$v_rewrite = true;
-} elseif ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . '.+/', $_SERVER['REQUEST_URI'] ) ) {
+} elseif ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( POST_DIR, '/' ) . '.+/', $_SERVER['REQUEST_URI'] ) ) {
+	// if the URI is constructed to match the URI of the source site
 	// ##### if the request is for "index.php", I should find a way to redirect it to "/"
-	$v_source_uri = preg_replace( '/' . preg_quote( BASE_URI, '/' ) . '/', '', $_SERVER['REQUEST_URI'] );
+	$v_source_uri = preg_replace( '/' . preg_quote( BASE_URI, '/' ) . preg_quote( POST_DIR, '/' ) . '/', '', $_SERVER['REQUEST_URI'] );
 } elseif ( preg_match( '/https?:\/\/' . preg_quote( REFERER_BASE, '/' ) . '/', $_SERVER['HTTP_REFERER'] ) ) {
+	// If the referrer is the source, grab the URI of the referrer
 	$v_source_uri = preg_replace( '/https?:\/\/' . preg_quote( REFERER_BASE, '/' ) . '/', '', $_SERVER['HTTP_REFERER'] );
 	$v_rewrite = true;
 } else {
-	// ##### This isn't right.
-	$v_source_uri = '1';
+	##### Display the main page
 }
 
 // There are a number of URL styles that we want to be able to work, but if possible, we want to redirect to a specific URL style.
 if ( $v_rewrite ) {
 	// ##### If ever I'm expecting other query variables, I will need to capture them before running this section.
-	$v_prot = 'http';
-	if ( isset( $_SERVER['HTTPS'] ) ) {
-		$v_prot .= 's';
-	}
-	$v_this_url = $v_prot . '://' . $_SERVER['HTTP_HOST'] . BASE_URI . $v_source_uri;
-	header("Location: " . $v_this_url );
+	header("Location: " . $v_main_site . POST_DIR . $v_source_uri );
 	exit();
 }
 
