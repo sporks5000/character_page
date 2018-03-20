@@ -52,6 +52,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_head = '';
 	static $v_body = '';
 	static $v_error = '';
+	static $v_iframe = '';
 	static $v_description = '';
 
 	static $a_section_content = array();
@@ -60,8 +61,10 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_disp_name = '';
 	static $v_disp_image = '';
 	static $a_item_data = array();
+	static $v_previous_page = '';
 	static $b_head = false;
 	static $b_description = false;
+	static $b_iframe = false;
 	static $b_is_prev = false;
 	static $c_sections = -1;
 	static $c_item_contents = 0;
@@ -89,6 +92,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} elseif ( $b_description ) {
 					$v_description = substr( $v_description, 0, -1 );
 					$out =& $v_description;
+				} elseif ( $b_iframe ) {
+					$v_iframe = substr( $v_iframe, 0, -1 );
+					$out =& $v_iframe;
 				} else {
 					$v_body = substr( $v_body, 0, -1 );
 					$out =& $v_body;
@@ -131,6 +137,17 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "ilink" ) {
 			} elseif ( $a_match[1] == "plink" ) {
+				if ( $b_head ) {
+					$out =& $v_head;
+				} elseif ( $b_description ) {
+					$out =& $v_description;
+				} elseif ( $b_iframe ) {
+					$out =& $v_iframe;
+				} else {
+					$out =& $v_body;
+				}
+				$out .= '<a href="' . $v_previous_page . '">' . $a_match[3] . "</a>\n";
+				unset( $out );
 			} elseif ( $a_match[1] == "repeat" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 				$c_repeats = 0;
@@ -156,18 +173,23 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 						}
 						$v_current_item = $_current_item;
 						##### I'm going to have to do this query different for single items, because I'll need to know if there's a next.
-						$o_results = $o_mysql_connection->query("SELECT Description from " . TABLE_PREFIX . "items where Name = '" . $v_current_item . "' AND Page<='" . $v_page . "' ORDER BY Page DESC LIMIT 2");
+						$o_results = $o_mysql_connection->query("SELECT Page, Description from " . TABLE_PREFIX . "items where Name = '" . $v_current_item . "' AND Page<='" . $v_page . "' ORDER BY Page DESC LIMIT 2");
 						if ( ! $o_results->num_rows ) {
 							// #####
 							echo "No such item. I have to figure out something better to do for this...";
 							exit;
-						} elseif ( $o_results->num_rows == "1" ) {
+						} elseif ( $o_results->num_rows >= "2" ) {
 							$b_is_prev = true;
+							##### I also need to get the page number for the previous page here.
 						} else {
 							$b_is_prev = false;
 						}
 						$a_item_data = $o_results->fetch_assoc();
 						$v_item_text = $a_item_data['Description'];
+						if ( $o_results->num_rows >= "2" ) {
+							$a_item_data = $o_results->fetch_assoc();
+							$v_previous_page = $a_item_data['Page'];
+						}
 						$a_item_text = preg_split( "/(\r)?\n/", $v_item_text );
 						$v_description = '';
 						$v_disp_name = '';
@@ -178,6 +200,11 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					}
 				}
 			} elseif ( $a_match[1] == "iframe" ) {
+				if ( $a_match[4] == "start" ) {
+					$b_iframe = true;
+				} else {
+					$b_iframe = false;
+				}
 			} elseif ( $a_match[1] == "nlink" ) {
 			} elseif ( $a_match[1] == "comment" ) {
 				// no nothing
@@ -198,7 +225,6 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				if ( $b_is_prev ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				}
-				#####
 			} elseif ( $a_match[1] == "is_next" && $a_match[4] == "start" && $v_type == "single" ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 				#####
@@ -230,6 +256,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} elseif ( $b_description ) {
 					$v_description = substr( $v_description, 0, -1 );
 					$out =& $v_description;
+				} elseif ( $b_iframe ) {
+					$v_iframe = substr( $v_iframe, 0, -1 );
+					$out =& $v_iframe;
 				} else {
 					$v_body = substr( $v_body, 0, -1 );
 					$out =& $v_body;
@@ -247,12 +276,15 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				$v_head .= $v_line . "\n";
 			} elseif ( $b_description ) {
 				$v_description .= $v_line . "\n";
+			} elseif ( $b_iframe ) {
+				$v_iframe = substr( $v_iframe, 0, -1 );
+				$out =& $v_iframe;
 			} else {
 				$v_body .= $v_line . "\n";
 			}
 		}
 	}
-	return array( $v_body, $v_error, $v_head );
+	return array( $v_body, $v_error, $v_head, $v_iframe );
 }
 
 function fn_extract_lines( $a_lines, $c_lines, $v_type ) {
@@ -340,7 +372,6 @@ $v_content = $a_row['Content'];
 
 // Create the variables that will store the head, the body, and any errors
 $out_head = "<html>\n<head>\n";
-// ##### This is where I need to add the fancy bits for the iframe
 $out_body = '';
 $out_error = "<!--\n";
 
@@ -360,11 +391,12 @@ $a_full_style = $o_results->fetch_assoc();
 $v_full_style_text = $a_full_style['Description'];
 $a_full_style_list = preg_split( "/(\r)?\n/", $v_full_style_text );
 
-list( $v_body, $v_error, $v_head ) = fn_parse_descriptions( $a_full_style_list, 'full' );
+list( $v_body, $v_error, $v_head, $v_iframe ) = fn_parse_descriptions( $a_full_style_list, 'full' );
+// ##### This is where I need to add the fancy bits for the iframe
+
 $out_body .= $v_body . "</body>\n</html>\n";
 $out_error .= $v_error . "-->\n";
 $out_head .= $v_head . "</head>\n";
-
 
 echo $out_head . $out_error . $out_body;
 
@@ -376,110 +408,3 @@ exit;
 
 
 
-
-
-
-
-
-
-// start creating the rendered page
-$rendered_page = $full_style['Start'];
-
-// for each section in the list of sections
-$first = true;
-$count = 0;
-foreach ( $content_list as &$section_list ) {
-	$count++;
-	if ( $first === true ) {
-		//we can ignore this one
-		$first = false;
-	} else {
-		//get the data about the section style
-		$section_style = $section_list[0];
-		$results = $o_mysql_connection->query("SELECT Start, End, Middle, LastLink from " . TABLE_PREFIX . "styles where Type = 'section' AND Name = '" . $section_style . "' AND Page<='" . $page . "' ORDER BY Page DESC LIMIT 1");
-		if ( ! $results->num_rows ) {
-			// #####
-			echo "No such section style. I have to figure out something better to do for this...";
-			exit;
-		}
-		$section_style = $results->fetch_assoc();
-		$rendered_page .= $section_style['Start'];
-		$first2 = true;
-		// go through each of the items in the content list
-		foreach ( $section_list as &$item ) {
-			if ( $first2 === true ) {
-				$first2 = false;
-			} else {
-				$results = $o_mysql_connection->query("SELECT Page, DispName, Image, Description from " . TABLE_PREFIX . "items where Name='" . $item . "' AND Page<='" . $page . "' ORDER BY Page DESC LIMIT 2");
-				$last = -1;
-				$results2 = $results->fetch_all(MYSQLI_BOTH);
-				if ( $results->num_rows == 2 ) {
-					$last = $results2[1]['Page'];
-				} elseif ( ! $results->num_rows ) {
-					// #####
-					echo "No such item. I have to figure out something better to do for this...";
-					exit;
-				}
-				$dispname = $results2[0]['DispName'];
-				$image = $results2[0]['Image'];
-				$description = $results2[0]['Description'];
-
-				// parse through the middle part of the section style
-				$section_middle = json_decode($section_style['Middle']);
-				foreach ( $section_middle as &$middle_part ) {
-					if ( $middle_part == "DISP_NAME" ) {
-						$rendered_page .= $dispname;
-					} elseif ( $middle_part == "IMAGE" ) {
-						$rendered_page .= $image;
-					} elseif ( $middle_part == "CONTENT" ) {
-						$item_content = json_decode($description);
-						foreach ( $item_content as &$content_part ) {
-							if ( $content_part[0] == "html" ) {
-								$rendered_page .= $content_part[1];
-							} elseif ( $content_part[0] == "link" ) {
-								$rendered_page .= '<a href="' . $content_part[1] . '">' . $content_part[2] . '</a>';
-								// ##### This needs to be done less quickly as well
-							} elseif ( $content_part[0] == "expand" ) {
-								// ##### More work here too
-								$rendered_page .= '<div class="expand_head">' . $content_part[1] . '<div class="expand">';
-								foreach ( $content_part[2] as &$content_part_part ) {
-									if ( $content_part_part[0] == "html" ) {
-										$rendered_page .= $content_part[1];
-									} elseif ( $content_part_part[0] == "link" ) {
-										$rendered_page .= '<a href="' . $content_part_part[1] . '">' . $content_part_part[2] . '</a>';
-										// ##### for this one, I should probably just have a function that does both of these link parts.
-									}
-								}
-								$rendered_page .= '</div></div>';
-							}
-						}
-					} elseif ( $middle_part == "LAST_LINK" ) {
-						if ( $last > -1 ) {
-							$section_last_link = json_decode($section_style['LastLink']);
-							foreach ( $section_last_link as &$last_link_part ) {
-								if ( $last_link_part == "LINK" ) {
-									$rendered_page .= "previous.html";
-									// ##### this will involve parsing and building it out and stuff... I'll get to that later
-								} else {
-									$rendered_page .= $last_link_part;
-								}
-							}
-						}
-					} else {
-						$rendered_page .= $middle_part;
-					}
-				}
-			}
-		}
-		$rendered_page .= $section_style['End'];
-		if ( $count != sizeof($content_list) ) {
-			$rendered_page .= $full_style['Middle'];
-		}
-	}
-}
-$rendered_page .= $full_style['End'];
-$o_mysql_connection->close();
-
-// output the final page
-echo $rendered_page;
-?>

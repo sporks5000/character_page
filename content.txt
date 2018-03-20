@@ -47,8 +47,8 @@
 " />
 >>> is_prev start
 			<div style="text-align:center;margin:auto;padding-top:5px;">
->>> plink &lt;-- prev				
-			</div>
+>>> plink &lt;-- prev
+</div>
 >>> is_prev end
 		</td>
 		<td style="padding-left:10px;">
@@ -93,6 +93,13 @@
 >>> disp_image images/laundry1.png
 >>> description start
 <p>The laundromat is dark and quiet. It should be open, but the lights inside are off.</p>
+>>> description end
+
+>>>>> declare item laundry 3
+>>> disp_name 24h Laundry
+>>> disp_image images/laundry2.png
+>>> description start
+<p>The laundromat is dark and quiet. The door is unlocked, but the lights inside are off.</p>
 >>> description end
 
 >>>>> declare item pixelated 2
