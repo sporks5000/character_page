@@ -3,15 +3,21 @@
 >>> head start
 	<title>All Night Laundry - Characters and Locations</title>
 	<style>
-		h2 {margin-top:5px;}
+		h2 {margin-top:5px;margin-bottom:5px;}
+		h1 {margin-bottom:2px;}
 	</style>
 >>> head end
 <body style="background-color:#222222;margin:0px;text-align:center;">
 	<div style="width:840px;background-color:#f8f8f8;margin:auto;min-height:100%">
 		<div id="title">
 			<h1 style="padding-top:5px;">All Night Laundry - Characters and Locations</h1>
+			<div style="margin-bottom:15px;">
+				<a href="
+>>> var SOURCE_URL
+">Source Page</a>
+			</div>
 		</div>
-		<div id="content" style="margin-left:10px;margin-right:10px;">
+		<div id="content" style="margin-left:10px;margin-right:10px;padding-bottom:20px;">
 >>> repeat start
 >>> content
 >>> not_last start
@@ -21,7 +27,9 @@
 		</div>
 	</div>
 >>> iframe start
-<!-- ##### Something should go here -->
+<div style="position:relative;top:40px;text-align:center;margin:auto;width:calc(100% - 104px);height:calc(100% - 484px);max-width:780px;max-height:calc(100% - 484px);border:2px solid black;">
+>>> content
+</div>
 >>> iframe end
 
 
@@ -33,32 +41,82 @@
 >>> var SECTION_NAME
 </h2>
 				<table>
-<!-- Shifting indent -->
 >>> repeat start
-	<tr>
-		<th colspan="2" style="text-align:left;">
+					<tr>
+>>> is_first start
+						<th colspan="2" style="text-align:left;">
+>>> is_first end
+>>> not_first start
+						<th colspan="2" style="text-align:left;padding-top:15px;">
+>>> not_first end
 >>> var DISP_NAME
-</th>
-	</tr>
-	<tr>
-		<td>
-			<img src="
+
+						</th>
+					</tr>
+					<tr>
+						<td style="width:1%;">
+							<img src="
 >>> var IMAGE
 " />
 >>> is_prev start
-			<div style="text-align:center;margin:auto;padding-top:5px;">
+							<div style="text-align:center;margin:auto;padding-top:5px;">
 >>> plink &lt;-- prev
-</div>
+							</div>
 >>> is_prev end
-		</td>
-		<td style="padding-left:10px;">
+						</td>
+						<td style="padding-left:10px;">
 >>> content
-		</td>
-	</tr>
+						</td>
+					</tr>
 >>> repeat end
-<!-- Unshifting indent -->
 				</table>
 			</div>
+
+
+>>>>> declare style style1_single 1 single
+<body style="background-color:#222222;margin:0px;text-align:center;">
+	<div style="margin:10px;background-color:#f8f8f8;width:calc(100% - 20px)">
+		<table style="width:100%;">
+			<tr>
+				<th colspan="2" style="text-align:left;">
+>>> var DISP_NAME
+</th>
+			</tr>
+			<tr>
+				<td style="width:1%;">
+					<img src="
+>>> var IMAGE
+" />
+				</td>
+				<td style="padding-left:10px;">
+>>> content
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<table style="width:100%;table-layout:fixed;">
+						<tr>
+							<td style="text-align:left;margin:auto;padding-top:5px;padding-left:15px;">
+>>> is_prev start
+>>> plink &lt;-- prev
+>>> is_prev end
+							</td>
+							<td style="text-align:center;margin:auto;padding-top:5px;">
+								<a href="
+>>> var SOURCE_URL
+">Source Page</a>
+							</td>
+							<td style="text-align:right;margin:auto;padding-top:5px;padding-right:15px;">
+>>> is_next start
+>>> nlink next --&gt;
+>>> is_next end
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</div>
 
 
 >>>>> declare content 2
@@ -73,43 +131,219 @@
 >>> s_style style1_section
 >>> item pixelated
 
+>>>>> declare content 5
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> item gregor
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+
+>>>>> declare content 10
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+
+>>>>> declare content 12
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+>>> s_name Notes
+>>> s_style style1_section
+>>> item note
+
+>>>>> declare content 13
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+>>> s_name Items
+>>> s_style style1_section
+>>> item tooth
+
+>>>>> declare content 15
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+>>> s_name Items
+>>> s_style style1_section
+>>> item tooth
+>>> item washing_machine
+
+>>>>> declare content 16
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+>>> s_name Items
+>>> s_style style1_section
+>>> item washing_machine
+
 
 >>>>> declare name 1 1
 >>>>> declare name 2 2
 >>>>> declare name 3 3
 >>>>> declare name 4 4
 >>>>> declare name 5 5
+>>>>> declare name 6 6
+>>>>> declare name 7 7
+>>>>> declare name 8 8
+>>>>> declare name 9 9
+>>>>> declare name 10 10
+>>>>> declare name 11 11
+>>>>> declare name 12 12
+>>>>> declare name 13 13
+>>>>> declare name 14 14
+>>>>> declare name 15 15
 
 
 >>>>> declare item bina 2
 >>> disp_name Bina
->>> disp_image ../images/bina1.png
+>>> disp_image images/bina1.png
 >>> description start
 <p>Bina is tired and kind of fuzzy. She was held up at work and she's out of clean clothes.</p>
 >>> description end
 
 >>>>> declare item laundry 2
 >>> disp_name 24h Laundry
->>> disp_image ../images/laundry1.png
+>>> disp_image images/laundry1.png
 >>> description start
 <p>The laundromat is dark and quiet. It should be open, but the lights inside are off.</p>
 >>> description end
 
 >>>>> declare item laundry 3
 >>> disp_name 24h Laundry
->>> disp_image ../images/laundry2.png
+>>> disp_image images/laundry2.png
 >>> description start
 <p>The laundromat is dark and quiet. The door is unlocked, but the lights inside are off.</p>
 >>> description end
 
 >>>>> declare item pixelated 2
 >>> disp_name "Pixelated"
->>> disp_image ../images/pixelated1.png
+>>> disp_image images/pixelated1.png
 >>> description start
 <p>This art style is used repeatedly throughout the comic for the interior of the laundromat. Here it runs from page 2 to page 26.</p>
 >>> description end
 
+>>>>> declare item gregor 5
+>>> disp_name Shadowy Figure
+>>> disp_image images/gregor1.png
+>>> description start
+<p>Who might this shadowy figure be?!</p>
+>>> description end
+
+>>>>> declare item laundry 6
+>>> disp_name 24h Laundry
+>>> disp_image images/laundry2.png
+>>> description start
+<p>The laundromat looks a lot more inviting with the light on. There are a number of washers and dryers.</p>
+>>> description end
+
+>>>>> declare item gregor 6
+>>> disp_name Laundromat Employee
+>>> disp_image images/gregor2.png
+>>> description start
+<p>The laundromat employee speaks English with a thick Eastern European accent.</p>
+>>> description end
+
+>>>>> declare item gregor 7
+>>> disp_name Gregor
+>>> disp_image images/gregor2.png
+>>> description start
+<p>Gregor speaks English with a thick Eastern European accent. He is either very awkward or very suspicious.</p>
+>>> description end
+
+>>>>> declare item bina 10
+>>> disp_name Bina
+>>> disp_image images/bina1.png
+>>> description start
+<p>Bina is tired and kind of fuzzy. She was going to try catching a nap while washing her clothes, but it turns out that she's also hungry.</p>
+>>> description end
+
+>>>>> declare item laundry 10
+>>> disp_name 24h Laundry
+>>> disp_image images/laundry3.png
+>>> description start
+<p>It's a building full of washers and dryers. Also, there is a snack machine in the back.</p>
+>>> description end
+
+>>>>> declare item note 12
+>>> disp_name Bananas!
+>>> disp_image images/banana_cookie.png
+>>> description start
+<p>Page 12 features the first of many references to bananas throughout the story, specifically in the form of the vending machine offering banana cookies.</p>
+>>> description end
+
+>>>>> declare item tooth 13
+>>> disp_name Was that a tooth?
+>>> disp_image images/tooth1.png
+>>> description start
+<p>There's something on the floor of the laundromat. It looks like a tooth...</p>
+>>> description end
+
+>>>>> declare item bina 14
+>>> disp_name Bina
+>>> disp_image images/bina2.png
+>>> description start
+<p>Bina was going to try catching a nap while washing her clothes, but then she found a tooth on the floor and... She suddenly feels very alone.</p>
+>>> description end
+
+>>>>> declare item tooth 14
+>>> disp_name A Front Tooth
+>>> disp_image images/tooth1.png
+>>> description start
+<p>There was a tooth on the floor of the laundromat. But now it's in Bina's hand. There's some blood on it too, like it was knocked or torn out.</p>
+>>> description end
+
+>>>>> declare item washing_machine 15
+>>> disp_name Unhappy Washing Machine
+>>> disp_image images/washing_machine1.png
+>>> description start
+<p>One of the washing machines is REALLY kicking up a racket.</p>
+>>> description end
 
 >>>>> declare type bina character
 >>>>> declare type laundry setting
 >>>>> declare type pixelated art_style
+>>>>> declare type gregor character
+>>>>> declare type note note
+>>>>> declare type tooth item
+>>>>> declare type washing_machine item

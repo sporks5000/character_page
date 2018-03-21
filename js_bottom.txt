@@ -1,0 +1,36 @@
+";
+	var overlay;
+	var pageBody;
+	var scrollbarWidth;
+	$(document).ready(function() {
+		pageBody = $("body");
+		pageBody.prepend('<div id="overlay" class="cp_overlay" style="display:none;position:absolute;width:100%;background-color:rgba(0,0,0,0.4);" onclick="fn_close_content()"></div>');
+		overlay = $('#overlay');
+		scrollbarWidth = fn_getScrollBarWidth();
+	});
+	function fn_getScrollBarWidth() {
+	// get the width of the scrollbar
+	// stolen from: https://stackoverflow.com/questions/986937/how-can-i-get-the-browsers-scrollbar-sizes
+		var $outer = $('<div>').css({visibility: 'hidden', width: 100, overflow: 'scroll'}).appendTo('body'),
+			widthWithScroll = $('<div>').css({width: '100%'}).appendTo($outer).outerWidth();
+		$outer.remove();
+		return 100 - widthWithScroll;
+	}
+	function fn_open_link(clicked) {
+	// when a link is clicked, open it in an iframe
+		var link = $(clicked);
+		var href = link.attr('src');
+		var overlayTop = $(document).scrollTop();
+		overlayTop = overlayTop - 5;
+		pageBody.css("overflow", "hidden").css('padding-right',scrollbarWidth + 'px');
+		overlay.css('display','block').css('top',overlayTop + 'px').css('height','calc(100% + 400px)');
+		overlay.prepend(iframeFrame);
+		$('#cp_single').attr('src',href);
+	}
+	function fn_close_content() {
+	// hide the overlay and remove the iframe
+		overlay.css('display','none');
+		overlay.children().first().remove();
+		pageBody.css("overflow", "scroll").css('padding-right','0px');
+	}
+</script>
