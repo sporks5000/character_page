@@ -10,6 +10,20 @@ if ( $o_results->num_rows == 0 ) {
 $a_row = $o_results->fetch_assoc();
 $v_page = $a_row['Page'];
 
+// get the next and previous page URI's
+$v_next_int_page = '';
+$v_prev_int_page = '';
+$o_results = $o_mysql_connection->query("SELECT URI from " . TABLE_PREFIX . "names where Page>'" . $v_page . "' ORDER BY Page ASC LIMIT 1");
+if ( $o_results->num_rows > 0 ) {
+	$a_row = $o_results->fetch_assoc();
+	$v_next_int_page = BASE_URI . POST_DIR . $a_row['URI'];
+}
+$o_results = $o_mysql_connection->query("SELECT URI from " . TABLE_PREFIX . "names where Page<'" . $v_page . "' ORDER BY Page DESC LIMIT 1");
+if ( $o_results->num_rows > 0 ) {
+	$a_row = $o_results->fetch_assoc();
+	$v_prev_int_page = BASE_URI . POST_DIR . $a_row['URI'];
+}
+
 // Using the page number, find out what content we need to pull
 $o_results = $o_mysql_connection->query("SELECT Content from " . TABLE_PREFIX . "contents where Page<='" . $v_page . "' ORDER BY Page DESC LIMIT 1");
 if ( $o_results->num_rows == 0 ) {

@@ -25,12 +25,29 @@
 >>> not_last end
 >>> repeat end
 		</div>
+>>> block style1_footer
 	</div>
 >>> iframe start
 <div style="position:relative;top:40px;text-align:center;margin:auto;width:calc(100% - 104px);height:calc(100% - 484px);max-width:780px;max-height:calc(100% - 484px);border:2px solid black;">
 >>> content
 </div>
 >>> iframe end
+
+
+>>>>> declare style style1_footer 1 footer
+		<div id="footer">
+>>> is_int_prev start
+			<a href="
+>>> var PREV_INT_PAGE
+">prev</a>
+>>> is_int_prev end
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+>>> is_int_next start
+			<a href="
+>>> var NEXT_INT_PAGE
+">next</a>
+>>> is_int_next end
+		</div>
 
 
 >>>>> declare style style1_section 1 section
