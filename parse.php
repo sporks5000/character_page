@@ -37,6 +37,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_iframe = '';
 	static $v_description = '';
 
+	static $v_main_type = '';
 	static $a_section_content = array();
 	static $v_section_name = '';
 	static $v_current_item = '';
@@ -67,6 +68,10 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	global $v_show_parse_level;
 	global $v_next_int_page;
 	global $v_prev_int_page;
+
+	if ( ! $v_main_type ) {
+		$v_main_type = $v_type;
+	}
 
 	if ( ! $v_last_section && $v_type == "full" ) {
 		$v_last_section = ( count( $o_content ) - 1 );
@@ -189,7 +194,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 				$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_current . '&style=' . $v_single_style;
 				$link_text = preg_replace( '/^' . preg_quote( $a_match[4] ) . '\s+/', '', $a_match[3] );
-				if ( $v_type != "single" ) {
+				if ( $v_main_type != "single" ) {
 					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
 				} else {
 					$out .= '<a class="cp_link" href="' . $link . '">' . $link_text . "</a>\n";
@@ -217,7 +222,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out =& $v_body;
 				}
 				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_previous_page . '&style=' . $v_single_style;
-				if ( $v_type != "single" ) {
+				if ( $v_main_type != "single" ) {
 					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				} else {
 					$out .= '<a class="cp_link" href="' . $link . '">' . $a_match[3] . "</a>\n";
@@ -281,7 +286,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out =& $v_body;
 				}
 				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_next_page . '&style=' . $v_single_style;
-				if ( $v_type != "single" ) {
+				if ( $v_main_type != "single" ) {
 					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				} else {
 					$out .= '<a class="cp_link" href="' . $link . '">' . $a_match[3] . "</a>\n";
