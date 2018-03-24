@@ -34,14 +34,16 @@
 >>> iframe end
 
 
->>>>> declare style style1_footer 1 footer
+>>>>> declare style style1_footer 1 block
 		<div id="footer">
 >>> is_int_prev start
 			<a href="
 >>> var PREV_INT_PAGE
 ">prev</a>
->>> is_int_prev end
+>>> is_int_next start
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+>>> is_int_next end
+>>> is_int_prev end
 >>> is_int_next start
 			<a href="
 >>> var NEXT_INT_PAGE
@@ -72,7 +74,7 @@
 					</tr>
 					<tr>
 						<td style="width:1%;">
-							<img src="
+							<img style="border:2px solid black;height:100px;width:100px;" src="
 >>> var IMAGE
 " />
 >>> is_prev start
@@ -135,6 +137,11 @@
 		</table>
 	</div>
 
+>>>>> declare content 1
+>>> style style1_full
+>>> s_name Notes
+>>> s_style style1_section
+>>> item note
 
 >>>>> declare content 2
 >>> style style1_full
@@ -181,12 +188,12 @@
 >>> s_name Settings
 >>> s_style style1_section
 >>> item laundry
->>> s_name Art Style
->>> s_style style1_section
->>> item pixelated
 >>> s_name Notes
 >>> s_style style1_section
 >>> item note
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
 
 >>>>> declare content 13
 >>> style style1_full
@@ -196,12 +203,12 @@
 >>> s_name Settings
 >>> s_style style1_section
 >>> item laundry
->>> s_name Art Style
->>> s_style style1_section
->>> item pixelated
 >>> s_name Items
 >>> s_style style1_section
 >>> item tooth
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
 
 >>>>> declare content 15
 >>> style style1_full
@@ -211,13 +218,13 @@
 >>> s_name Settings
 >>> s_style style1_section
 >>> item laundry
->>> s_name Art Style
->>> s_style style1_section
->>> item pixelated
 >>> s_name Items
 >>> s_style style1_section
 >>> item tooth
 >>> item washing_machine
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
 
 >>>>> declare content 16
 >>> style style1_full
@@ -227,12 +234,28 @@
 >>> s_name Settings
 >>> s_style style1_section
 >>> item laundry
->>> s_name Art Style
->>> s_style style1_section
->>> item pixelated
 >>> s_name Items
 >>> s_style style1_section
 >>> item washing_machine
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
+
+>>>>> declare content 19
+>>> style style1_full
+>>> s_name Characters
+>>> s_style style1_section
+>>> item bina
+>>> item hound
+>>> s_name Settings
+>>> s_style style1_section
+>>> item laundry
+>>> s_name Items
+>>> s_style style1_section
+>>> item washing_machine
+>>> s_name Art Style
+>>> s_style style1_section
+>>> item pixelated
 
 
 >>>>> declare name 1 1
@@ -250,7 +273,22 @@
 >>>>> declare name 13 13
 >>>>> declare name 14 14
 >>>>> declare name 15 15
+>>>>> declare name 16 16
+>>>>> declare name 17 17
+>>>>> declare name 18 18
+>>>>> declare name 19 19
+>>>>> declare name 20 20
+>>>>> declare name 21 21
+>>>>> declare name 22 22
+>>>>> declare name 23 23
 
+
+>>>>> declare item note 1
+>>> disp_name Note: First Page?
+>>> disp_image images/first_page.png
+>>> description start
+<p>There is no official first page of the story. The original post was apparently just the author announcing that he would be writing it. While the announcement is gone, there are still two images from it that remain: <a href="https://s3.ca-central-1.amazonaws.com/allnightlaundry/0001_a_The_Title_Card.gif">here</a> and <a href="https://s3.ca-central-1.amazonaws.com/allnightlaundry/0001_b.gif">here</a>.</p>
+>>> description end
 
 >>>>> declare item bina 2
 >>> disp_name Bina
@@ -323,7 +361,7 @@
 >>> description end
 
 >>>>> declare item note 12
->>> disp_name Bananas!
+>>> disp_name Note: Bananas!
 >>> disp_image images/banana_cookie.png
 >>> description start
 <p>Page 12 features the first of many references to bananas throughout the story, specifically in the form of the vending machine offering banana cookies.</p>
@@ -340,14 +378,18 @@
 >>> disp_name Bina
 >>> disp_image images/bina2.png
 >>> description start
-<p>Bina was going to try catching a nap while washing her clothes, but then she found a tooth on the floor and... She suddenly feels very alone.</p>
+<p>Bina was going to try catching a nap while washing her clothes, but then she found a
+>>> ilink tooth tooth
+on the floor and... She suddenly feels very alone.</p>
 >>> description end
 
 >>>>> declare item tooth 14
 >>> disp_name A Front Tooth
 >>> disp_image images/tooth1.png
 >>> description start
-<p>There was a tooth on the floor of the laundromat. But now it's in Bina's hand. There's some blood on it too, like it was knocked or torn out.</p>
+<p>There was a tooth on the floor of the laundromat. But now it's in
+>>> ilink bina Bina's
+hand. There's some blood on it too, like it was knocked or torn out.</p>
 >>> description end
 
 >>>>> declare item washing_machine 15
@@ -357,6 +399,67 @@
 <p>One of the washing machines is REALLY kicking up a racket.</p>
 >>> description end
 
+>>>>> declare item washing_machine 18
+>>> disp_name Unhappy Washing Machine
+>>> disp_image images/washing_machine1.png
+>>> description start
+<p>The washing machine shudders with a wet, sloshing, thud. Dirty water sloshes onto the floor.</p>
+>>> description end
+
+>>>>> declare item hound 19
+>>> disp_name Glowy Arm Thing
+>>> disp_image images/hound1.png
+>>> description start
+<p>There's a weird skeletal arm-thing somehow impossibly glowing black emerging from the 
+>>> ilink washing_machine washing machine
+>>> no_new_line
+. Somehow
+>>> ilink bina Bina
+hasn't noticed it yet</p>
+>>> description end
+
+>>>>> declare item washing_machine 20
+>>> disp_name Unhappy Washing Machine
+>>> disp_image images/washing_machine1.png
+>>> description start
+<p>The washing machine lays on its side on the floor of the laundromat, disgorging a puddle of muddy water and a weird skeletal
+>>> ilink hound dog thing
+>>> no_new_line
+.</p>
+>>> description end
+
+>>>>> declare item hound 20
+>>> disp_name Skeletal Dog Thing
+>>> disp_image images/hound2.png
+>>> description start
+<p>A skeletal dog thing has emerged from the upturned
+>>> ilink washing_machine washing machine
+and seems intent on crawling after
+>>> ilink bina Bina
+>>> no_new_line
+.</p>
+>>> description end
+
+>>>>> declare item bina 20
+>>> disp_name Bina
+>>> disp_image images/bina3.png
+>>> description start
+<p>All Bina wanted to do was to get her laundry finished and also not be attacked by a weird skeletal
+>>> ilink hound dog thing
+>>> no_new_line
+. Today, it turns out, is not her day.</p>
+>>> description end
+
+>>>>> declare item laundry 20
+>>> disp_name 24h Laundry
+>>> disp_image images/laundry3.png
+>>> description start
+<p>It's a building full of washers and dryers. the floor is splotched with a dark muddy substance that has emerged from a capsized
+>>> ilink washing_machine washing machine
+>>> no_new_line
+.</p>
+>>> description end
+
 >>>>> declare type bina character
 >>>>> declare type laundry setting
 >>>>> declare type pixelated art_style
@@ -364,3 +467,4 @@
 >>>>> declare type note note
 >>>>> declare type tooth item
 >>>>> declare type washing_machine item
+>>>>> declare type hound character

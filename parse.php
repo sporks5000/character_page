@@ -178,14 +178,34 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				$a_block_style_list = preg_split( "/(\r)?\n/", $v_block_style_text );
 				fn_parse_descriptions( $a_block_style_list, 'block' );
 			} elseif ( $a_match[1] == "ilink" ) {
+				if ( $b_head ) {
+					$out =& $v_head;
+				} elseif ( $b_description ) {
+					$out =& $v_description;
+				} elseif ( $b_iframe ) {
+					$out =& $v_iframe;
+				} else {
+					$out =& $v_body;
+				}
 				$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_current . '&style=' . $v_single_style;
 				$link_text = preg_replace( '/^' . preg_quote( $a_match[4] ) . '\s+/', '', $a_match[3] );
 				if ( $v_type != "single" ) {
-					$out .= '<a class="cp_link" href="#" src="' . $a_match[4] . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
+					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
 				} else {
-					$out .= '<a class="cp_link" href="' . $a_match[4] . '">' . $link_text . "</a>\n";
+					$out .= '<a class="cp_link" href="' . $link . '">' . $link_text . "</a>\n";
 				}
 				##### I need to test this
+			} elseif ( $a_match[1] == "no_new_line" ) {
+				if ( $b_head ) {
+					$out =& $v_head;
+				} elseif ( $b_description ) {
+					$out =& $v_description;
+				} elseif ( $b_iframe ) {
+					$out =& $v_iframe;
+				} else {
+					$out =& $v_body;
+				}
+				$out = substr( $out, 0, -1 );
 			} elseif ( $a_match[1] == "plink" ) {
 				if ( $b_head ) {
 					$out =& $v_head;

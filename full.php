@@ -56,11 +56,11 @@ $v_full_style_text = $a_full_style['Description'];
 $a_full_style_list = preg_split( "/(\r)?\n/", $v_full_style_text );
 
 list( $v_body, $v_error, $v_head, $v_iframe ) = fn_parse_descriptions( $a_full_style_list, 'full' );
-$js_top = file_get_contents( dirname( __FILE__ ) . '/js_top.txt' );
+$js_top = file_get_contents( dirname( __FILE__ ) . '/js_top_full.txt' );
 while ( substr($js_top, -1) != '"' ) {
 	$js_top = substr( $js_top, 0, -1 );
 }
-$out_head .= $js_top . $v_iframe . file_get_contents( dirname( __FILE__ ) . '/js_bottom.txt' );
+$out_head .= $js_top . $v_iframe . file_get_contents( dirname( __FILE__ ) . '/js_bottom_full.txt' );
 
 $out_body .= $v_body . "</body>\n</html>";
 $out_error .= $v_error . "-->\n";
