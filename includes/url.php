@@ -52,12 +52,12 @@ if ( $_GET['show_parse'] == 1 ) {
 	$v_show_parse_level = 2;
 }
 
-require( dirname( __FILE__ ) . '/parse.php' );
-require( dirname( __FILE__ ) . '/connect.php' );
+require( $v_incdir . '/parse.php' );
+require( $v_incdir . '/connect.php' );
 
 if ( $b_do_main ) {
 } elseif ( $b_do_single ) {
-	require( dirname( __FILE__ ) . '/single.php' );
+	require( $v_incdir . '/single.php' );
 } else {
-	require( dirname( __FILE__ ) . '/full.php' );
+	require( $v_incdir . '/full.php' );
 }

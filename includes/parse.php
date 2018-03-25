@@ -46,6 +46,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_last_section = '';
 	static $v_last_item = '';
 	static $a_item_data = array();
+	static $a_set = array();
 	static $v_previous_page = '';
 	static $v_next_page = '';
 	static $v_single_style = '';
@@ -134,6 +135,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} elseif ( $a_match[4] == "ITEM_DATA" ) {
 					$variable = preg_replace( '/^\s*>>>\s+var\s+ITEM_DATA\s+([^\s]+).*$/', '$1', $a_match[0] );
 					$out .= $a_item_data[$variable - 1];
+				} elseif ( $a_match[4] == "SET" ) {
+					$variable = preg_replace( '/^\s*>>>\s+var\s+SET\s+([^\s]+).*$/', '$1', $a_match[0] );
+					$out .= $a_set[$variable];
 				} elseif ( $a_match[4] == "SECTION_NAME" ) {
 					$out .= $v_section_name;
 				} elseif ( $a_match[4] == "SOURCE_URL" ) {
@@ -192,14 +196,14 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} else {
 					$out =& $v_body;
 				}
-				$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_current . '&style=' . $v_single_style;
 				$link_text = preg_replace( '/^' . preg_quote( $a_match[4] ) . '\s+/', '', $a_match[3] );
 				if ( $v_main_type != "single" ) {
+					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_current . '&style=' . $v_single_style;
 					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
 				} else {
+					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_page . '&style=' . $v_single_style;
 					$out .= '<a class="cp_link" href="' . $link . '">' . $link_text . "</a>\n";
 				}
-				##### I need to test this
 			} elseif ( $a_match[1] == "no_new_line" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
@@ -210,7 +214,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} else {
 					$out =& $v_body;
 				}
-				$out = substr( $out, 0, -1 );
+				if ( substr( $out, -1 ) == "\n" ) {
+					$out = substr( $out, 0, -1 );
+				}
 			} elseif ( $a_match[1] == "plink" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
@@ -269,6 +275,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} else {
 					$v_error .= "Error (repeat out of place in " . $v_type . "): " . $v_line . "\n";
 				}
+			} elseif ( $a_match[1] == "set" && preg_match( '/^[0-9]+$/', $a_match[4] ) ) {
+				$variable = preg_replace( '/^\s*>>>\s+set\s+' . $a_match[4] . '\s+/', '', $a_match[0] );
+				$a_set[$a_match[4]] = $variable;
 			} elseif ( $a_match[1] == "iframe" ) {
 				if ( $a_match[4] == "start" ) {
 					$b_iframe = true;

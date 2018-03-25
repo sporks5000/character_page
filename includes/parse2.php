@@ -4,6 +4,7 @@ function fn_parse_import ( $a_import_text ) {
 	global $o_mysql_connection;
 	static $v_error = '';
 	static $v_success = '';
+	static $v_delete = '';
 	$c_lines = 0;
 	while ( $c_lines < count( $a_import_text ) ) {
 		$v_line = $a_import_text[$c_lines];
@@ -35,17 +36,46 @@ function fn_parse_import ( $a_import_text ) {
 				echo "Failed import data: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 				exit;
 			}
-		} else {
+
+		} elseif ( preg_match( '/^\s*>>>>>\s+delete\s+([^\s]+)\s+(.*)$/', $v_line, $a_match ) ) {
+			$a_arguments = preg_split( "/\s+/", $a_match[2] );
+			if ( $a_match[1] == 'name' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
+				$o_results = $o_mysql_connection->query("DELETE FROM " . TABLE_PREFIX . "names WHERE URL='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'");
+				$v_delete .= "<li>name: " . $a_arguments[0] . "</li>\n";
+			} elseif ( $a_match[1] == 'content' && isset( $a_arguments[0] ) ) {
+				$o_results = $o_mysql_connection->query("DELETE FROM " . TABLE_PREFIX . "contents WHERE Page='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'");
+				$v_delete .= "<li>content: " . $a_arguments[0] . "</li>\n";
+			} elseif ( $a_match[1] == 'style' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) && isset( $a_arguments[2] )  ) {
+				$o_results = $o_mysql_connection->query("DELETE FROM " . TABLE_PREFIX . "sytles WHERE Name='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "' AND Page='" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "'");
+				$v_delete .= "<li>style: " . $a_arguments[0] . " | " . $a_arguments[1] . "</li>\n";
+			} elseif ( $a_match[1] == 'item' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
+				$o_results = $o_mysql_connection->query("DELETE FROM " . TABLE_PREFIX . "items WHERE Name='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "' AND Page='" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "'");
+				$v_delete .= "<li>item: " . $a_arguments[0] . " | " . $a_arguments[1] . "</li>\n";
+			} elseif ( $a_match[1] == 'type' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
+				$o_results = $o_mysql_connection->query("DELETE FROM " . TABLE_PREFIX . "types WHERE URL='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'");
+				$v_delete .= "<li>type: " . $a_arguments[0] . "</li>\n";
+			} else {
+				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . $v_line . "</li>\n";
+			}
+			if ( $o_mysql_connection->errno ) {
+				echo "Failed import data: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
+				exit;
+			}
+
+		} elseif ( $v_line != "" ) {
 			$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . $v_line . "</li>\n";
 		}
 	}
 	if ( $v_success ) {
 		$v_success = "<ul>\n" . $v_success . "</ul>\n";
 	}
+	if ( $v_delete ) {
+		$v_delete = "<ul>\n" . $v_delete . "</ul>\n";
+	}
 	if ( $v_error ) {
 		$v_error = "<ul>\n" . $v_error . "</ul>\n";
 	}
-	return array( $v_error, $v_success );
+	return array( $v_error, $v_success, $v_delete );
 }
 
 function fn_extract_lines2( $a_lines, $c_lines ) {

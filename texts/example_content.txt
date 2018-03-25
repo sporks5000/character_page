@@ -1,0 +1,143 @@
+>>>>> declare style style1_full 1 full
+>>> single style1_single
+>>> head start
+	<title>Example - Characters and Locations</title>
+	<style>
+		h2 {margin-top:5px;margin-bottom:5px;}
+		h1 {margin-bottom:2px;}
+	</style>
+>>> head end
+<body style="background-color:#222222;margin:0px;text-align:center;">
+	<div style="width:840px;background-color:#f8f8f8;margin:auto;min-height:100%">
+		<div id="title">
+			<h1 style="padding-top:5px;">Example - Characters and Locations</h1>
+			<div style="margin-bottom:15px;">
+				<a href="
+>>> var SOURCE_URL
+">Source Page</a>
+			</div>
+		</div>
+		<div id="content" style="margin-left:10px;margin-right:10px;padding-bottom:20px;">
+>>> repeat start
+>>> content
+>>> not_last start
+			<br /><hr /><br />
+>>> not_last end
+>>> repeat end
+		</div>
+>>> block style1_footer
+	</div>
+>>> iframe start
+<div style="position:relative;top:40px;text-align:center;margin:auto;width:calc(100% - 104px);height:calc(100% - 484px);max-width:780px;max-height:calc(100% - 484px);border:2px solid black;">
+>>> content
+</div>
+>>> iframe end
+
+
+
+>>>>> declare style style1_footer 1 block
+		<div id="footer">
+>>> is_int_prev start
+			<a href="
+>>> var PREV_INT_PAGE
+">prev</a>
+>>> is_int_next start
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+>>> is_int_next end
+>>> is_int_prev end
+>>> is_int_next start
+			<a href="
+>>> var NEXT_INT_PAGE
+">next</a>
+>>> is_int_next end
+		</div>
+
+
+
+
+>>>>> declare style style1_section 1 section
+			<div id="section_
+>>> var SECT_NUM
+">
+				<h2>
+>>> var SECTION_NAME
+</h2>
+				<table>
+>>> repeat start
+					<tr>
+>>> is_first start
+						<th colspan="2" style="text-align:left;">
+>>> is_first end
+>>> not_first start
+						<th colspan="2" style="text-align:left;padding-top:15px;">
+>>> not_first end
+>>> var DISP_NAME
+
+						</th>
+					</tr>
+					<tr>
+						<td style="width:1%;">
+							<img style="border:2px solid black;height:100px;width:100px;" src="
+>>> var IMAGE
+" />
+>>> is_prev start
+							<div style="text-align:center;margin:auto;padding-top:5px;">
+>>> plink &lt;-- prev
+							</div>
+>>> is_prev end
+						</td>
+						<td style="padding-left:10px;">
+>>> content
+						</td>
+					</tr>
+>>> repeat end
+				</table>
+			</div>
+
+
+
+
+>>>>> declare style style1_single 1 single
+<body style="background-color:#222222;margin:0px;text-align:center;">
+	<div style="margin:10px;background-color:#f8f8f8;width:calc(100% - 20px)">
+		<table style="width:100%;">
+			<tr>
+				<th colspan="2" style="text-align:left;">
+>>> var DISP_NAME
+</th>
+			</tr>
+			<tr>
+				<td style="width:1%;">
+					<img style="border:2px solid black;height:100px;width:100px;" src="
+>>> var IMAGE
+" />
+				</td>
+				<td style="padding-left:10px;">
+>>> content
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<table style="width:100%;table-layout:fixed;">
+						<tr>
+							<td style="text-align:left;margin:auto;padding-top:5px;padding-left:15px;">
+>>> is_prev start
+>>> plink &lt;-- prev
+>>> is_prev end
+							</td>
+							<td style="text-align:center;margin:auto;padding-top:5px;">
+								<a href="
+>>> var SOURCE_URL
+">Source Page</a>
+							</td>
+							<td style="text-align:right;margin:auto;padding-top:5px;padding-right:15px;">
+>>> is_next start
+>>> nlink next --&gt;
+>>> is_next end
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+	</div>

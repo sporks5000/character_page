@@ -1,8 +1,0 @@
-1)  Modify the single-item view so that it loads next and previous pages in the background before displaying them.
-2)  Should the "initialization" page remove itself? Should it transform into the import page after initialization has occurred?
-3)  a way to remove content?
-4)  a way to export content
-5)  cookies and session data? <- maybe storing the highest seen current page in the session data and not letting the next and previous links for full pages extend beyond that?
-6)  instead of redirecting to a different page if the URL isn't in the requested format, just change the text in the URL bar <- maybe impossible?
-7)  A page that shows all items of a certain type at the current point in the story.
-8)  a main page

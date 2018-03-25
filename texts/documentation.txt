@@ -4,7 +4,20 @@
 
 One of the most frustrating things about reading a webcomic or other serialized story is when a character or location or item re-appears after not having been mentioned for months or years and suddenly the reader is left either digging through source material to figure out who or what is being discussed, or (more often) simply accepting that they will be confused with the story for a bit, but hoping that context cludes further on will remind them of what's going on. Serialized web stories almost always have a "characters" page - this can fill in the gaps to some extent, but almost always it's designed to be as spoiler free as possible, which means that the information you're looking for is rarely ever there.
 
-The goal of this project is to create a "characters" page that updates as the story moves forward. It's designed specifically to determine what page is "current" based on the referrer URI (what page linked to it) and not show any data from after that point. Readers can browse backward through when a certain character or item's description has changed and be linked to the page within the source content relevant to that change.
+The goal of this project is to create a "characters" page that updates as the story moves forward. It's designed specifically to determine what page is "current" based on the referrer URI (what page linked to it) and not show any data from after that point. Readers can browse backward through when a certain character or item's description has changed and be linked to the page within the source content relevant to that change. To be clear - the goal isn't to absolutely prevent users from spoiling content for themselves (because they're users - if they really want to, they'll find a way) but rather to offer them details relevant and up-to-date relative to their current position in the story.
+
+#=====================#
+#== Getting Started ==#
+#=====================#
+
+Note: This project does not include any process for uploading files to the server, so if you don't have a way to accomplish that, maybe this project is not right for you.
+
+1) Upload all of the files for this project to the server. Ensure that they have the correct permissions, etc.
+2) Create a database and two database users for this project. See the "Mysql Users" section below for details regarding the two users.
+3) Edit the includes/config.php file on the server to include the mysql username and password as well as other relevant bits.
+4) Navigate to the initialize.php file and enter the username and password for the admin user. This will create the necessary tables within the database.
+5) Navigate to the import.php file and enter the username and password for the admin user. Add content for the page.
+6) That's it - You're up and running!
 
 #==========================#
 #== Database Information ==#
@@ -28,6 +41,14 @@ Table4 (cp_styles): four columns - styles and layouts
 Table5 (cp_types): two columns - what type of item each item is
         an item name
         the type of item it is (e.g. "character", "setting")
+
+The commands to create these databases look like this:
+
+CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2) );
+CREATE TABLE IF NOT EXISTS cp_contents ( Page FLOAT(8.2) PRIMARY KEY, Content MEDIUMTEXT );
+CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
+CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
+CREATE TABLE IF NOT EXISTS cp_types ( Name VARCHAR(100) PRIMARY KEY, Type TINYTEXT );
 
 #=================#
 #== Mysql Users ==#
@@ -65,7 +86,7 @@ The idea is that the config file will only have the username and password of the
 
 Styles and, to some extent, items are created with HTML code. in order to get them to behave in the desired manner, this code is mixed in with command keywords that help determine what portions of the HTML should be output and in what way. All command keywords are prefaced by the string ">>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line. 
 
-Single items:
+Regular command kaywords:
 * >>> var [VARIABLE] - a variable to be interpreted by the script
 * >>> comment [TEXT] - a comment that won't be interpreted y the parser
 * >>> link [ITEM NAME] - an item name to convert into a URL
@@ -75,6 +96,7 @@ Single items:
 * >>> content - the next level of content in the "full"->"section"->"item" chain, or the iframe for "full" styles that single pages will go into. (cannot be used in "block" styles)
 * >>> block [STYLE NAME] - used to call a block style.
 * >>> no_new_line - prevents the output from the previous line ending in a new line character. Useful for some spacing weirdness
+* >>> set [NUMBER] - allows a usert to associate a number with a string and then later use the "SET" variable to recall that string.
 
 Indicate start or end positions
 * >>> repeat ["start" OR "end"] - (only in "section" and "full") Everything in between repeats for each section or item (if multiple starts are present before an end, they will be used in sequence and loop until all sections or items have been used) (cannot be used in "block" styles)
@@ -99,7 +121,7 @@ Special data for items (must be listed before anything else):
 * >>> item_data - (only for items) a varaible that can be used to store data about the item. Multiple of these can be used; they will be stored in an array
 * >>> description ["start" OR "end"] - indicates the description for an item
 
-Special data for full page styles
+Special data for full page styles:
 * >>> single [STYLE NAME] - declare the single image style that should be used for the iframe
 
 Special data for "content":
@@ -123,11 +145,19 @@ Note: Other than the following exceptions, all lines beginning with ">>>" will b
 
 The script can import the contents of text files into the database. For this process, what kind of internal object (style, name, content, item, or type) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string ">>>>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line.
 
+Creation:
 * >>>>> declare name [URL] [PAGE]
 * >>>>> declare content [PAGE]
 * >>>>> declare style [NAME] [PAGE] [TYPE]
 * >>>>> declare item [NAME] [PAGE]
 * >>>>> declare type [NAME] [TYPE]
+
+Deletion:
+* >>>>> delete name [URL]
+* >>>>> delete content [PAGE]
+* >>>>> delete style [NAME] [PAGE]
+* >>>>> delete item [NAME] [PAGE]
+* >>>>> delete type [NAME]
 
 #========================#
 #== Internal Variables ==#
@@ -146,6 +176,7 @@ These are variables that can be used with the command keyword "var":
 * ITEM_NUM - The number of the current item in the current section (counting starts at zero)
 * NEXT_INT_PAGE - (Not available for single styles) the URL of the next internal page
 * PREV_INT_PAGE -  (Not available for single styles) the URL of the previous internal page
+* SET [NUMBER] - a variable set by the user using the "set" command keyword
 
 #===================#
 #== Project Files ==#
@@ -154,17 +185,18 @@ These are variables that can be used with the command keyword "var":
 Files that are included within the project:
 
 * index.php - Calls the other files for the script
-* config.php - Includes the configuration to connect to the database as well as specifics about the site in question
-* parse.php - Includes the functions necessaey to parse the contents, items, and styles
-* url.php - Parses the url and other data to determine what content needs to be loaded
-* full.php - Loads a full page relative to a post from the source page
-* connect.php - connects to mysql
-* single.php - Loads a siingle page view
-* js_top_full.txt - text that will be used to begin the full page view pages
-* js_bottom_full.txt - additional text for the full page view pages containing the javascript that makes the links work
 * initialize.php - creates the necessary mysql tables (assuming that there is already a mysql user and database, and that the config file is filled out)
 * import.php - A page that allows the user to import content into the database
-* parse2.php - Includes the functions necessaary to parse database content
+* export.php - Outputs the text for all of the items, types, names, contents, and styles within the database.
+* includes/config.php - Includes the configuration to connect to the database as well as specifics about the site in question
+* includes/parse.php - Includes the functions necessaey to parse the contents, items, and styles
+* includes/url.php - Parses the url and other data to determine what content needs to be loaded
+* includes/full.php - Loads a full page relative to a post from the source page
+* includes/connect.php - connects to mysql
+* includes/single.php - Loads a siingle page view
+* includes/js_top_full.txt - text that will be used to begin the full page view pages
+* includes/js_bottom_full.txt - additional text for the full page view pages containing the javascript that makes the links work
+* includes/parse2.php - Includes the functions necessaary to parse database content
 
 #===============================#
 #== Internally Generated HTML ==#
@@ -175,7 +207,7 @@ There are four major pieces of HTML that are generated by the code within the pr
 * The following tags will be added programatically <html>, <head>, </head>, </body>, </html>. Note that the opening <body> tag is expected to be within styles.
 * The script will create the "next" and "previous" links for items based on command keywords within style (more information below)
 * The script will create the iframe element for single item pages based on the "content" command keyword within "iframe start" and "iframe end" command keywords within the style (more information below)
-* The script will output initial styles and javascript content based on the text within the files js_top_full.txt and js_bottom_full.txt
+* The script will output initial css and javascript content based on the text within the files js_top_full.txt and js_bottom_full.txt
 
 #=====================#
 #== Regarding Links ==#

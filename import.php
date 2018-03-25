@@ -5,8 +5,11 @@
 
 <?php
 
-$v_db_alt_user = "";
-$v_db_alt_password = "";
+$v_db_alt_user = '';
+$v_db_alt_password = '';
+
+$v_rootdir = dirname( __FILE__ );
+$v_incdir = $v_rootdir . '/includes';
 
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	// use the username and password from the POST data
@@ -17,14 +20,18 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		$v_db_alt_password = $_POST['pass'];
 	}
 	if ( $_POST['text'] ) {
-		require( dirname( __FILE__ ) . '/config.php' );
-		require( dirname( __FILE__ ) . '/connect.php' );
-		require( dirname( __FILE__ ) . '/parse2.php' );
+		require( $v_incdir . '/config.php' );
+		require( $v_incdir . '/connect.php' );
+		require( $v_incdir . '/parse2.php' );
+
 		$a_import_text = preg_split( "/(\r)?\n/", $_POST['text'] );
 		// Parse the import text
-		list( $v_error, $v_success ) = fn_parse_import( $a_import_text );
+		list( $v_error, $v_success, $v_delete ) = fn_parse_import( $a_import_text );
 		if ( $v_success ) {
 			echo "<h3>The following items were successfully imported</h3>\n" . $v_success;
+		}
+		if ( $v_delete ) {
+			echo "<h3>The following items were successfully deleted</h3>\n" . $v_delete;
 		}
 		if ( $v_error ) {
 			echo "<h3>The following lines did not make sense</h3>\n" . $v_error;
@@ -50,3 +57,7 @@ if ( $v_db_alt_user ) {
 </form>
 </body>
 </html>
+
+<?php
+exit;
+?>
