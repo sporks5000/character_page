@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 	$o_results = $o_mysql_connection->query("
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types (
-			Name VARCHAR(100) PRIMARY KEY, Type TINYTEXT
+			Name VARCHAR(100), Type VARCHAR(100), PRIMARY KEY ( Name, Type )
 		)
 	");
 	if ( $o_mysql_connection->errno ) {

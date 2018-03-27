@@ -204,7 +204,8 @@ function fn_parse_import ( $a_import_text ) {
 			} elseif ( $a_match[1] == 'type' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
 				$o_results = $o_mysql_connection->query("
 					DELETE FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types
-					WHERE URL='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'
+					WHERE Name='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'
+					AND Type='" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "'
 				");
 				$v_delete .= "<li>type: " . $a_arguments[0] . "</li>\n";
 			} elseif ( $a_match[1] == 'document' && isset( $a_arguments[0] ) ) {

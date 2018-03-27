@@ -54,10 +54,10 @@ Table6 (cp_documents): two columns - single webpages, such as a main page or a "
 The commands to create these databases look like this:
 
 CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2) );
-CREATE TABLE IF NOT EXISTS cp_contents ( Page FLOAT(8.2) PRIMARY KEY, Content MEDIUMTEXT );
+CREATE TABLE IF NOT EXISTS cp_contents ( Page FLOAT(8.2), Content MEDIUMTEXT, Type TINYTEXT, Name VARCHAR(100), PRIMARY KEY ( Name, Page ) );
 CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, Next FLOAT(8.2), Previous FLOAT(8.2), PRIMARY KEY ( Name, Page ) );
 CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
-CREATE TABLE IF NOT EXISTS cp_types ( Name VARCHAR(100) PRIMARY KEY, Type TINYTEXT );
+CREATE TABLE IF NOT EXISTS cp_types ( Name VARCHAR(100), Type VARCHAR(100), PRIMARY KEY ( Name, Type ) );
 CREATE TABLE IF NOT EXISTS cp_documents ( URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT );
 
 #=================#
@@ -85,8 +85,8 @@ The idea is that the config file will only have the username and password of the
 #=======================#
 
 * DB_NAME - The name of the mysql database that you're connecting to
-* DB_USER - The mysql user that you're connecting to the database with (Note, this should be the user with lesser permissions)
-* DB_PASSWORD - The password of the mysql user that you're connecting with
+* DB_USER - The mysql user that you're connecting to the database with (Note, this should be the less privileged user)
+* DB_PASSWORD - The password of the mysql user from above
 * DB_HOST - This will almost always be "localhost". 
 * REFERER_BASE - Assuming that the source is linking to this page, what's the base URL of the referrer for those requests? So for example, if a standard page from the sounce would have the URL "https://example.com/posts/2014-11-25/10", the REFERER_BASE should likely be "example.com/posts/"
 * REFERER_MAIN - The full URL of the main page of the source site. So with the above example, probably "example.com/"
@@ -179,12 +179,12 @@ Special data for "content":
 #== Declaration Keywords ==#
 #==========================#
 
-The script can import the contents of text files into the database. For this process, what kind of internal object (style, name, content, item, or type) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string ">>>>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line.
+The script can import text content into the database. For this process, what kind of internal object (style, name, content, item, or type) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string ">>>>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line.
 
 Creation:
 * >>>>> declare name [URL] [PAGE]
 * >>>>> declare content [PAGE] [TYPE ("page", "list", or "block")] [NAME (only necessary for block, otherwise will be ignored)] (after this, a new line followed by the desired content
-* >>>>> declare style [NAME] [PAGE] [TYPE] (after this, a new line followed by the desired content)
+* >>>>> declare style [NAME] [PAGE] [TYPE ("full", "section", "single", or "block")] (after this, a new line followed by the desired content)
 * >>>>> declare item [NAME] [PAGE] (after this, a new line followed by the desired content)
 * >>>>> declare type [NAME] [TYPE]
 * >>>>> declare document [URI] (after this, a new line followed by the desired content)
@@ -194,10 +194,13 @@ Deletion:
 * >>>>> delete content [PAGE] [NAME (only necessary for block, otherwise will be ignored)]
 * >>>>> delete style [NAME] [PAGE]
 * >>>>> delete item [NAME] [PAGE]
-* >>>>> delete type [NAME]
+* >>>>> delete type [NAME] [TYPE]
 * >>>>> delete document [URI]
 
-Note: for "content", "cp_page_con" and "cp_list_con" are exempt from being used as names, as they will be the names populated for non block content. Inversely, when ever deleting "page" or "list" content types, you will need to specify "cp_page_con" or "cp_list_con" as appropriate for the name
+Notes:
+* The "name" field for content, styles, items, and types AND the "type" field for content, styles, and types CANNOT contain whitespace, as the parsing process separates these details out by whitespace.
+* For "content", "cp_page_con" and "cp_list_con" are exempt from being used as names, as they will be the names populated for non block content. Inversely, when ever deleting "page" or "list" content types, you will need to specify "cp_page_con" or "cp_list_con" as appropriate for the name
+* For "Type", there's no reason why you can't specify one item as being multiple different types. For example, you might choose to make a talking sword both type "item" and type "character".
 
 #========================#
 #== Internal Variables ==#

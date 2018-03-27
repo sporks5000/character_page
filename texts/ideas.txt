@@ -63,7 +63,7 @@ Header text
 Footer text
 >>> footer end
 
----Which can be condensed to 
+--- the above can be condensed to the following:
 
 >>>>> declare content 5 page
 >>> style style1_full
@@ -74,7 +74,6 @@ Footer text
 >>> s_style style1_section
 >>> items bina gregor
 >>> block head_foot
-
 
 >>>>> declare content 5 block head_foot
 >>> header start
@@ -98,13 +97,13 @@ Footer text
 >>> items pixelated
 >>> block head_foot
 
---- to parse this
+--- Description of the process that will be used to parse this
 
-1) Go through the page content creating a list of items and expanding each block as they arrive. The output of this should be an array of items and an array of lines (minus the block lines)
+1) Go through the page content creating a list of items and expanding each block as they arrive. The output of this step should be an array of items and an array of lines (minus the block lines)
 2) Query the database for all of the requested items, create an object out of them
 3) Parse through the fully expanded content, parsing headers and footers as necessary in order to create a JSON object.
 
---- the object of all of the items will look like this
+--- the object containing all of the items will look like this
 
 {
 	bina:{
@@ -138,7 +137,7 @@ Footer text
 	}
 }
 
---- the end content object would look like:
+--- the final content object would look like this:
 
 {
 	"style":"style1_full",
@@ -206,16 +205,16 @@ Footer text
 
 --- Command keywords for content
 
-* >>> style [FULL STYLE NAME] - declares the full style for this content
+* >>> style [FULL STYLE NAME] - declares the "full" style for this content
 * >>> sections [LIST OF SPACE SEPARATED SECTION ID's] - the list of the sections in the order that they will go in
-* >>> section [SECTION ID] - an identifier for the section. Note that this won't be displayed and as such can be arbitrary, so lnog as they are unique
+* >>> section [SECTION ID] - an identifier for the section. Note that this won't be displayed and as such can be arbitrary, so long as none are repeated
 * >>> type [TYPE] - The items listed in this section will correlate to a type per the cp_types table
 * >>> s_name [STRING] - a display name for the section, referenced with the "SECTION_NAME" variable
-* >>> s_style [SECTION STYLE NAME] - the name of the style for the section
-* >>> items [LIST OF SPACE SEPARATED ITEMS] - the list of the items that will appear in this section, in the order that they will go in
+* >>> s_style [SECTION STYLE NAME] - the name of the style that will be used for the section
+* >>> items [LIST OF SPACE SEPARATED ITEMS] - the list of the items that will appear in this section, in the order that they will go in.
 * >>> block [BLOCK NAME] - The name of a content block. This line will be replaced by all lines within that content block
 * >>> header ["start" OR "end"] - everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_HEAD" variable
-* >>> footer ["start" OR "end"] - everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_HEAD" variable
+* >>> footer ["start" OR "end"] - everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_FOOT" variable
 
 
 
