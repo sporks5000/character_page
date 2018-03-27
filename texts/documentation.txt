@@ -28,9 +28,11 @@ Note: This project does not include any process for uploading files to the serve
 Table1 (cp_names): two columns - compares the URI to a post number
         a URI
         a page number (not necessarily incrimenting)
-Table2 (cp_contents): two columns - the json that we'll be working from for each post
+Table2 (cp_contents): four columns - a list of content that we'll be working from for each page
         a number that corralates to table1
         text describing categories and content items for those categories
+	a type ("page", "list", or "block")
+	a name ("page" and "list" types are automatically named "cp_page_con" and "cp_list_con", respectively)
 Table3 (cp_items): five columns - the details for an item
         the name of a content item
         the page number
@@ -149,12 +151,6 @@ Special data for items:
 Special data for "full" styles:
 * >>> single [STYLE NAME] - declare the single image style that should be used for the iframe
 
-Special data for "content":
-* >>> style [FULL STYLE NAME] - the style for the page (should be declared before any styles or items)
-* >>> s_name [NAME ]- the name of the upcoming section (should be declared before the style) (There's no reason that this cannot contain any length of text or html)
-* >>> s_style [SECTION STYLE NAME] - the style of the upcoming section
-* >>> item [ITME NAME] - an item within the section
-
 Special data for "documents":
 * >>> style [FULL STYLE NAME] [PAGE NUMBER] - When defining documents, if this is used, the style named will be output. Everything after this point within the document definition will be output with the "content" command keyword.
 
@@ -167,6 +163,18 @@ Note: Other than the following exceptions, all lines beginning with ">>>" will b
 * var
 * link
 
+#==================================#
+#== Command Keywords for Content ==#
+#==================================#
+
+Content is handled by a different parser than items and styles (though the headers and footers within content are an exception to this). Here are the special command keywords for parsing content:
+
+Special data for "content":
+* >>> style [FULL STYLE NAME] - the style for the page (should be declared before any styles or items)
+* >>> s_name [NAME ]- the name of the upcoming section (should be declared before the style) (There's no reason that this cannot contain any length of text or html)
+* >>> s_style [SECTION STYLE NAME] - the style of the upcoming section
+* >>> item [ITME NAME] - an item within the section
+
 #==========================#
 #== Declaration Keywords ==#
 #==========================#
@@ -175,7 +183,7 @@ The script can import the contents of text files into the database. For this pro
 
 Creation:
 * >>>>> declare name [URL] [PAGE]
-* >>>>> declare content [PAGE] (after this, a new line followed by the desired content)
+* >>>>> declare content [PAGE] [TYPE ("page", "list", or "block")] [NAME (only necessary for block, otherwise will be ignored)] (after this, a new line followed by the desired content
 * >>>>> declare style [NAME] [PAGE] [TYPE] (after this, a new line followed by the desired content)
 * >>>>> declare item [NAME] [PAGE] (after this, a new line followed by the desired content)
 * >>>>> declare type [NAME] [TYPE]
@@ -183,11 +191,13 @@ Creation:
 
 Deletion:
 * >>>>> delete name [URL]
-* >>>>> delete content [PAGE]
+* >>>>> delete content [PAGE] [NAME (only necessary for block, otherwise will be ignored)]
 * >>>>> delete style [NAME] [PAGE]
 * >>>>> delete item [NAME] [PAGE]
 * >>>>> delete type [NAME]
 * >>>>> delete document [URI]
+
+Note: for "content", "cp_page_con" and "cp_list_con" are exempt from being used as names, as they will be the names populated for non block content. Inversely, when ever deleting "page" or "list" content types, you will need to specify "cp_page_con" or "cp_list_con" as appropriate for the name
 
 #========================#
 #== Internal Variables ==#
@@ -201,7 +211,7 @@ These are variables that can be used with the command keyword "var":
 * ITEM_DATA [NUMBER (starting with 1)] - Other data for the item, stored as an array. So, for example, if you want to have a variable for the age of characters.
 * SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
 * SOURCE_URL - the URL of the source page that this page is referencing
-* MAIN_EXT_URL - The URL of the main page f the source
+* MAIN_EXT_URL - The URL of the main page of the source
 * MAIN_URL - the URL for the main page of this site (not the source site)
 * SECT_NUM - the number of the current section (counting starts at zero)
 * ITEM_NUM - The number of the current item in the current section (counting starts at zero)

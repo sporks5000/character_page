@@ -18,14 +18,34 @@ function fn_parse_import ( $a_import_text ) {
 					ON DUPLICATE KEY UPDATE Page='" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "'
 				");
 				$v_success .= "<li>name: " . $a_arguments[0] . " | " . $a_arguments[1] . "</li>\n";
-			} elseif ( $a_match[1] == 'content' && isset( $a_arguments[0] ) ) {
+			} elseif ( $a_match[1] == 'content' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
+				$v_con_name = '';
+				if ( $a_arguments[1] == "page" ) {
+					$v_con_name = 'cp_page_con';
+				} elseif ( $a_arguments[1] == "list" ) {
+					$v_con_name = 'cp_list_con';
+				} elseif ( $a_arguments[1] == "block" && isset( $a_arguments[2] ) ) {
+					if ( $a_arguments[2] == 'cp_page_con' || $a_arguments[2] == 'cp_list_con' ) {
+						$v_error .= "<li>line " . ( $c_lines - 1 ) . " (exempt content name): " . $v_line . "</li>\n";
+						continue;
+					}
+					$v_con_name = $a_arguments[2];
+				} else {
+					$v_error .= "<li>line " . ( $c_lines - 1 ) . " (no content name): " . $v_line . "</li>\n";
+					continue;
+				}
 				list( $v_out, $c_lines ) = fn_extract_lines2( $a_import_text, $c_lines );
 				$o_results = $o_mysql_connection->query("
-					INSERT INTO " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents (Page, Content)
-					VALUES ('" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "','" . $o_mysql_connection->real_escape_string($v_out) . "')
+					INSERT INTO " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents (Page, Content, Type, Name)
+					VALUES (
+						'" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "',
+						'" . $o_mysql_connection->real_escape_string($v_out) . "',
+						'" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "',
+						'" . $o_mysql_connection->real_escape_string($v_con_name) . "'
+					)
 					ON DUPLICATE KEY UPDATE Content='" . $o_mysql_connection->real_escape_string($v_out) . "'
 				");
-				$v_success .= "<li>content: " . $a_arguments[0] . "</li>\n";
+				$v_success .= "<li>content: " . $a_arguments[0] . " | " . $v_con_name . "</li>\n";
 			} elseif ( $a_match[1] == 'style' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) && isset( $a_arguments[2] )  ) {
 				list( $v_out, $c_lines ) = fn_extract_lines2( $a_import_text, $c_lines );
 				$o_results = $o_mysql_connection->query("
@@ -124,12 +144,14 @@ function fn_parse_import ( $a_import_text ) {
 					WHERE URL='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'
 				");
 				$v_delete .= "<li>name: " . $a_arguments[0] . "</li>\n";
-			} elseif ( $a_match[1] == 'content' && isset( $a_arguments[0] ) ) {
+			} elseif ( $a_match[1] == 'content' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
 				$o_results = $o_mysql_connection->query("
 					DELETE FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
 					WHERE Page='" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'
+					AND Name='" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "'
 				");
 				$v_delete .= "<li>content: " . $a_arguments[0] . "</li>\n";
+
 			} elseif ( $a_match[1] == 'style' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) && isset( $a_arguments[2] )  ) {
 				$o_results = $o_mysql_connection->query("
 					DELETE FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "sytles

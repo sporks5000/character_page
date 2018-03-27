@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 	$o_results = $o_mysql_connection->query("
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents (
-			Page FLOAT(8.2) PRIMARY KEY, Content MEDIUMTEXT
+			Page FLOAT(8.2), Content MEDIUMTEXT, Type TINYTEXT, Name VARCHAR(100), PRIMARY KEY ( Name, Page )
 		)
 	");
 	if ( $o_mysql_connection->errno ) {

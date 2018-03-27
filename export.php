@@ -39,11 +39,15 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	$v_out .= "\n\n\n";
 
 	$o_results = $o_mysql_connection->query("
-		SELECT Page, Content from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
+		SELECT Page, Content, Type, Name from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
 		ORDER BY Page ASC
 	");
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare content " . $a_row['Page'] . "\n" . $a_row['Content'] . "\n\n";
+		if ( $a_row['Type'] == "block" ) {
+			$v_out .= ">>>>> declare content " . $a_row['Page'] . " block " . $a_row['Name'] . "\n" . $a_row['Content'] . "\n\n";
+		} else {
+			$v_out .= ">>>>> declare content " . $a_row['Page'] . " " . $a_row['Type'] . "\n" . $a_row['Content'] . "\n\n";
+		}
 	}
 	$v_out .= "\n\n\n";
 
