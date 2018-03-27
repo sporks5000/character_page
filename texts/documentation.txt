@@ -2,7 +2,9 @@
 #== Objective ==#
 #===============#
 
-One of the most frustrating things about reading a webcomic or other serialized story is when a character or location or item re-appears after not having been mentioned for months or years and suddenly the reader is left either digging through source material to figure out who or what is being discussed, or (more often) simply accepting that they will be confused with the story for a bit, but hoping that context cludes further on will remind them of what's going on. Serialized web stories almost always have a "characters" page - this can fill in the gaps to some extent, but almost always it's designed to be as spoiler free as possible, which means that the information you're looking for is rarely ever there.
+One of the most frustrating things about reading a webcomic or other serialized story is when a character or location or item re-appears after not having been mentioned for months or years and suddenly the reader is left either digging through source material to figure out who or what is being discussed, or (more often) simply accepting that they will be confused with the story for a bit, but hoping that context clues further on will remind them of what's going on. Serialized web stories almost always have a "characters" page - this can fill in the gaps to some extent, but almost always it's designed to be as spoiler free as possible, which means that the information you're looking for is rarely ever there.
+
+"Sure the prince of the kingdom has a mysterious past, but the details of that mysterious past were discussed a few hundred pages back and why should I have to dig through history of the story to find the specific twenty pages that I need to re-read If those details colud be summed up in an easily accessable paragraph or two?!"
 
 The goal of this project is to create a "characters" page that updates as the story moves forward. It's designed specifically to determine what page is "current" based on the referrer URI (what page linked to it) and not show any data from after that point. Readers can browse backward through when a certain character or item's description has changed and be linked to the page within the source content relevant to that change. To be clear - the goal isn't to absolutely prevent users from spoiling content for themselves (because they're users - if they really want to, they'll find a way) but rather to offer them details relevant and up-to-date relative to their current position in the story.
 
@@ -16,7 +18,7 @@ Note: This project does not include any process for uploading files to the serve
 2) Create a database and two database users for this project. See the "Mysql Users" section below for details regarding the two users.
 3) Edit the includes/config.php file on the server to include the mysql username and password as well as other relevant bits.
 4) Navigate to the initialize.php file and enter the username and password for the admin user. This will create the necessary tables within the database.
-5) Navigate to the import.php file and enter the username and password for the admin user. Add content for the page.
+5) Navigate to the import.php file and enter the username and password for the admin user. Add content (see the details below on how keywords should be used).
 6) That's it - You're up and running!
 
 #==========================#
@@ -29,10 +31,12 @@ Table1 (cp_names): two columns - compares the URI to a post number
 Table2 (cp_contents): two columns - the json that we'll be working from for each post
         a number that corralates to table1
         text describing categories and content items for those categories
-Table3 (cp_items): three columns - the details for an item
+Table3 (cp_items): five columns - the details for an item
         the name of a content item
         the page number
         text describing that item.
+	The next page that that item is updated on
+	The previous page that that item is updated on
 Table4 (cp_styles): four columns - styles and layouts
         the type of style it is ("full", "section", "single", "block")
         the name of the style
@@ -41,14 +45,18 @@ Table4 (cp_styles): four columns - styles and layouts
 Table5 (cp_types): two columns - what type of item each item is
         an item name
         the type of item it is (e.g. "character", "setting")
+Table6 (cp_documents): two columns - single webpages, such as a main page or a "contacts" page
+	The URI that the page should be located at (relative to the base uri)
+	Text describing what will be shown there.
 
 The commands to create these databases look like this:
 
 CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2) );
 CREATE TABLE IF NOT EXISTS cp_contents ( Page FLOAT(8.2) PRIMARY KEY, Content MEDIUMTEXT );
-CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
+CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, Next FLOAT(8.2), Previous FLOAT(8.2), PRIMARY KEY ( Name, Page ) );
 CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
 CREATE TABLE IF NOT EXISTS cp_types ( Name VARCHAR(100) PRIMARY KEY, Type TINYTEXT );
+CREATE TABLE IF NOT EXISTS cp_documents ( URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT );
 
 #=================#
 #== Mysql Users ==#
@@ -68,7 +76,22 @@ The idea is that the config file will only have the username and password of the
 #== General Rules ==#
 #===================#
 
-* All styles and items MUST have internal names without spaces, given that the parsing is done based on whitespace
+* All styles and items MUST have internal names without spaces or tabs, given that the parsing is done based on whitespace.
+
+#=======================#
+#== Config Directives ==#
+#=======================#
+
+* DB_NAME - The name of the mysql database that you're connecting to
+* DB_USER - The mysql user that you're connecting to the database with (Note, this should be the user with lesser permissions)
+* DB_PASSWORD - The password of the mysql user that you're connecting with
+* DB_HOST - This will almost always be "localhost". 
+* REFERER_BASE - Assuming that the source is linking to this page, what's the base URL of the referrer for those requests? So for example, if a standard page from the sounce would have the URL "https://example.com/posts/2014-11-25/10", the REFERER_BASE should likely be "example.com/posts/"
+* REFERER_MAIN - The full URL of the main page of the source site. So with the above example, probably "example.com/"
+* PROTOCOL - What is the protocol that the referrer uses? Either "http" or "https"
+* BASE_URI - The base URI for THIS site (not the source site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; if you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"
+* TABLE_PREFIX - You usually won't need to chane this from "cp_", but really, this can be what ever you want.
+* PAGE_DIR - The directory that you want indvidual pages to be referenced at. So, if you want the character page for pagge 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".
 
 #=====================#
 #== Types of Styles ==#
@@ -79,6 +102,7 @@ The idea is that the config file will only have the username and password of the
 * single - This style is for pages displayed within the iframe showing only a single item. Think of them as a cross between full and section.
 * block - This style is for blocks of content that are not expected to contain other items. For example, they might be used for a header or footer. These are called with the "block" command keyword. Note that there are a number of command keywords that can be used within block styles, but depending on where they're placed, they may not necessarily have the desired effect.
 * item - Technically this is not a style. Items contain information about a specific item (relevant to a specific page) as well as text regarding that item.
+* document - Also technically not a style. Documentss have their own unique URI on the site. The site will fail to behave as intended if there is not at least one document (the main page of the site) defined with URI "/".
 
 #======================#
 #== Command Keywords ==#
@@ -86,8 +110,8 @@ The idea is that the config file will only have the username and password of the
 
 Styles and, to some extent, items are created with HTML code. in order to get them to behave in the desired manner, this code is mixed in with command keywords that help determine what portions of the HTML should be output and in what way. All command keywords are prefaced by the string ">>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line. 
 
-Regular command kaywords:
-* >>> var [VARIABLE] - a variable to be interpreted by the script
+Regular command keywords:
+* >>> var [VARIABLE NAME] - a variable to be interpreted by the script
 * >>> comment [TEXT] - a comment that won't be interpreted y the parser
 * >>> link [ITEM NAME] - an item name to convert into a URL
 * >>> ilink [ITEM NAME] [TEXT] - Convert this to a link that will be opened in the iframe
@@ -96,7 +120,8 @@ Regular command kaywords:
 * >>> content - the next level of content in the "full"->"section"->"item" chain, or the iframe for "full" styles that single pages will go into. (cannot be used in "block" styles)
 * >>> block [STYLE NAME] - used to call a block style.
 * >>> no_new_line - prevents the output from the previous line ending in a new line character. Useful for some spacing weirdness
-* >>> set [NUMBER] - allows a usert to associate a number with a string and then later use the "SET" variable to recall that string.
+* >>> set [NUMBER] [TEXT] - allows a usert to associate a number with a string and then later use the "SET" variable to recall that string.
+* >>> constant [NUMBER] [TEXT] - sets constant - only set the first time that it's referenced, other instances are ignored. This allows some flexibility for using "full" styles on documents. see the "CONSTANT" variable below.
 
 Indicate start or end positions
 * >>> repeat ["start" OR "end"] - (only in "section" and "full") Everything in between repeats for each section or item (if multiple starts are present before an end, they will be used in sequence and loop until all sections or items have been used) (cannot be used in "block" styles)
@@ -115,20 +140,23 @@ Indicate start or end positions
 * >>> head ["start" OR "end"] - indicates a section that goes into the header
 * >>> iframe ["start" OR "end"] - indicates a section that goes into the div that surrounds the iframe
 
-Special data for items (must be listed before anything else):
+Special data for items:
 * >>> disp_name - (only for items) The display name of the item
 * >>> disp_image - (only for items) The image url for an item
 * >>> item_data - (only for items) a varaible that can be used to store data about the item. Multiple of these can be used; they will be stored in an array
 * >>> description ["start" OR "end"] - indicates the description for an item
 
-Special data for full page styles:
+Special data for "full" styles:
 * >>> single [STYLE NAME] - declare the single image style that should be used for the iframe
 
 Special data for "content":
-* >>> style - the style for the page (should be declared before any styles or items)
-* >>> s_name - the name of the upcoming section (should be declared before the style) (There's no reason that this cannot contain any length of text or html)
-* >>> s_style - the style of the upcoming section
-* >>> item - an item within the section
+* >>> style [FULL STYLE NAME] - the style for the page (should be declared before any styles or items)
+* >>> s_name [NAME ]- the name of the upcoming section (should be declared before the style) (There's no reason that this cannot contain any length of text or html)
+* >>> s_style [SECTION STYLE NAME] - the style of the upcoming section
+* >>> item [ITME NAME] - an item within the section
+
+Special data for "documents":
+* >>> style [FULL STYLE NAME] [PAGE NUMBER] - When defining documents, if this is used, the style named will be output. Everything after this point within the document definition will be output with the "content" command keyword.
 
 Plain HTML and other information:
 * Anything that needs to be parsed as plain html doesn't need to be preceeded with anything
@@ -147,10 +175,11 @@ The script can import the contents of text files into the database. For this pro
 
 Creation:
 * >>>>> declare name [URL] [PAGE]
-* >>>>> declare content [PAGE]
-* >>>>> declare style [NAME] [PAGE] [TYPE]
-* >>>>> declare item [NAME] [PAGE]
+* >>>>> declare content [PAGE] (after this, a new line followed by the desired content)
+* >>>>> declare style [NAME] [PAGE] [TYPE] (after this, a new line followed by the desired content)
+* >>>>> declare item [NAME] [PAGE] (after this, a new line followed by the desired content)
 * >>>>> declare type [NAME] [TYPE]
+* >>>>> declare document [URI] (after this, a new line followed by the desired content)
 
 Deletion:
 * >>>>> delete name [URL]
@@ -158,6 +187,7 @@ Deletion:
 * >>>>> delete style [NAME] [PAGE]
 * >>>>> delete item [NAME] [PAGE]
 * >>>>> delete type [NAME]
+* >>>>> delete document [URI]
 
 #========================#
 #== Internal Variables ==#
@@ -171,12 +201,14 @@ These are variables that can be used with the command keyword "var":
 * ITEM_DATA [NUMBER (starting with 1)] - Other data for the item, stored as an array. So, for example, if you want to have a variable for the age of characters.
 * SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
 * SOURCE_URL - the URL of the source page that this page is referencing
+* MAIN_EXT_URL - The URL of the main page f the source
 * MAIN_URL - the URL for the main page of this site (not the source site)
 * SECT_NUM - the number of the current section (counting starts at zero)
 * ITEM_NUM - The number of the current item in the current section (counting starts at zero)
 * NEXT_INT_PAGE - (Not available for single styles) the URL of the next internal page
-* PREV_INT_PAGE -  (Not available for single styles) the URL of the previous internal page
+* PREV_INT_PAGE - (Not available for single styles) the URL of the previous internal page
 * SET [NUMBER] - a variable set by the user using the "set" command keyword
+* CONSTANT [NUMBER] - a constant set by the user using the "constant" command keyword. Once a constant is set, further attempts to change it will fail silently.
 
 #===================#
 #== Project Files ==#
@@ -197,6 +229,7 @@ Files that are included within the project:
 * includes/js_top_full.txt - text that will be used to begin the full page view pages
 * includes/js_bottom_full.txt - additional text for the full page view pages containing the javascript that makes the links work
 * includes/parse2.php - Includes the functions necessaary to parse database content
+* includes/document.php - The processes necessary for loading a document.
 
 #===============================#
 #== Internally Generated HTML ==#
@@ -213,7 +246,7 @@ There are four major pieces of HTML that are generated by the code within the pr
 #== Regarding Links ==#
 #=====================#
 
-Any links generated by the script within the full page view will have the html class "cp_link". They will be presented in the following format:
+Any links generated by this project within the full page view will have the html class "cp_link". They will be presented in the following format:
 
 	<a class="cp_link" href="#" src="" onclick="fn_open_link(this);return false;">link text</a>
 

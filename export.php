@@ -20,33 +20,57 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	require( $v_incdir . '/config.php' );
 	require( $v_incdir . '/connect.php' );
 
-	$o_results = $o_mysql_connection->query("SELECT URI, Page from " . TABLE_PREFIX . "names ORDER BY Page ASC");
+	$o_results = $o_mysql_connection->query("
+		SELECT URI, Page from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names 
+		ORDER BY Page ASC
+	");
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare name " . $a_row['URI'] . " " . $a_row['Page'] . "\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("SELECT Name, Type from " . TABLE_PREFIX . "types ORDER BY Type ASC");
+	$o_results = $o_mysql_connection->query("
+		SELECT Name, Type from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types
+		ORDER BY Type ASC
+	");
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare type " . $a_row['Name'] . " " . $a_row['Type'] . "\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("SELECT Page, Content from " . TABLE_PREFIX . "contents ORDER BY Page ASC");
+	$o_results = $o_mysql_connection->query("
+		SELECT Page, Content from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
+		ORDER BY Page ASC
+	");
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare content " . $a_row['Page'] . "\n" . $a_row['Content'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("SELECT Name, Page, Description from " . TABLE_PREFIX . "items ORDER BY Page ASC");
+	$o_results = $o_mysql_connection->query("
+		SELECT Name, Page, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
+		ORDER BY Page ASC
+	");
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare item " . $a_row['Name'] . " " . $a_row['Page'] . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("SELECT Type, Name, Page, Description from " . TABLE_PREFIX . "styles ORDER BY Page ASC");
+	$o_results = $o_mysql_connection->query("
+		SELECT Type, Name, Page, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
+		ORDER BY Page ASC
+	");
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare style " . $a_row['Name'] . " " . $a_row['Page'] . " " . $a_row['Type'] . "\n" . $a_row['Description'] . "\n\n";
+	}
+	$v_out .= "\n\n\n";
+
+	$o_results = $o_mysql_connection->query("
+		SELECT URI, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents
+		ORDER BY URI ASC
+	");
+	while ( $a_row = $o_results->fetch_assoc() ) {
+		$v_out .= ">>>>> declare document " . $a_row['URI'] . "\n" . $a_row['Description'] . "\n\n";
 	}
 
 	while ( substr( $v_out, -1 ) == "\n" ) {

@@ -1,7 +1,10 @@
 <?php
 
 // Using the URI, get the page number
-$o_results = $o_mysql_connection->query("SELECT Page from " . TABLE_PREFIX . "names where URI='" . $v_source_uri . "'");
+$o_results = $o_mysql_connection->query("
+	SELECT Page from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names 
+	WHERE URI='" . $o_mysql_connection->real_escape_string($v_source_uri) . "'
+");
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such page. I have to figure out something better to do for this...";
@@ -13,19 +16,34 @@ $v_page = $a_row['Page'];
 // get the next and previous page URI's
 $v_next_int_page = '';
 $v_prev_int_page = '';
-$o_results = $o_mysql_connection->query("SELECT URI from " . TABLE_PREFIX . "names where Page>'" . $v_page . "' ORDER BY Page ASC LIMIT 1");
+$o_results = $o_mysql_connection->query("
+	SELECT URI from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names
+	WHERE Page>'" . $o_mysql_connection->real_escape_string($v_page) . "'
+	ORDER BY Page ASC
+	LIMIT 1
+");
 if ( $o_results->num_rows > 0 ) {
 	$a_row = $o_results->fetch_assoc();
-	$v_next_int_page = BASE_URI . POST_DIR . $a_row['URI'];
+	$v_next_int_page = BASE_URI . PAGE_DIR . $a_row['URI'];
 }
-$o_results = $o_mysql_connection->query("SELECT URI from " . TABLE_PREFIX . "names where Page<'" . $v_page . "' ORDER BY Page DESC LIMIT 1");
+$o_results = $o_mysql_connection->query("
+	SELECT URI from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names 
+	WHERE Page<'" . $o_mysql_connection->real_escape_string($v_page) . "'
+	ORDER BY Page DESC
+	LIMIT 1
+");
 if ( $o_results->num_rows > 0 ) {
 	$a_row = $o_results->fetch_assoc();
-	$v_prev_int_page = BASE_URI . POST_DIR . $a_row['URI'];
+	$v_prev_int_page = BASE_URI . PAGE_DIR . $a_row['URI'];
 }
 
 // Using the page number, find out what content we need to pull
-$o_results = $o_mysql_connection->query("SELECT Content from " . TABLE_PREFIX . "contents where Page<='" . $v_page . "' ORDER BY Page DESC LIMIT 1");
+$o_results = $o_mysql_connection->query("
+	SELECT Content from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
+	WHERE Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+	ORDER BY Page DESC
+	LIMIT 1
+");
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such page content. I have to figure out something better to do for this...";
@@ -45,7 +63,14 @@ list( $v_full_style, $o_content, $v_errors ) = fn_parse_content ($a_content_list
 $out_error .= $v_errors;
 
 // pull the full style
-$o_results = $o_mysql_connection->query("SELECT Description from " . TABLE_PREFIX . "styles where Type = 'full' AND Name = '" . $v_full_style . "' AND Page<='" . $v_page . "' ORDER BY Page DESC LIMIT 1");
+$o_results = $o_mysql_connection->query("
+	SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
+	WHERE Type = 'full'
+	AND Name = '" . $o_mysql_connection->real_escape_string($v_full_style) . "'
+	AND Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+	ORDER BY Page DESC
+	LIMIT 1
+");
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such full page style. I have to figure out something better to do for this...";

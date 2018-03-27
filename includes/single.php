@@ -6,7 +6,14 @@ $v_style = $_GET['style'];
 $v_item = preg_replace( '/^' . preg_quote( BASE_URI, '/' ) . 'single\//', '', explode( '?', $_SERVER['REQUEST_URI'] )[0] );
 
 // pull the single style
-$o_results = $o_mysql_connection->query("SELECT Description from " . TABLE_PREFIX . "styles where Type = 'single' AND Name = '" . $v_style . "' AND Page<='" . $v_current . "' ORDER BY Page DESC LIMIT 1");
+$o_results = $o_mysql_connection->query("
+	SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
+	WHERE Type = 'single'
+	AND Name = '" . $o_mysql_connection->real_escape_string($v_style) . "'
+	AND Page<='" . $o_mysql_connection->real_escape_string($v_current) . "'
+	ORDER BY Page DESC
+	LIMIT 1
+");
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such single page style. I have to figure out something better to do for this...";
@@ -17,7 +24,12 @@ $v_single_style_text = $a_single_style['Description'];
 $a_single_style_list = preg_split( "/(\r)?\n/", $v_single_style_text );
 
 // Pull the URI for the source page and create a source URL
-$o_results = $o_mysql_connection->query("SELECT URI from " . TABLE_PREFIX . "names where Page='" . $v_page . "' ORDER BY Page DESC LIMIT 1");
+$o_results = $o_mysql_connection->query("
+	SELECT URI from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names
+	WHERE Page='" . $o_mysql_connection->real_escape_string($v_page) . "'
+	ORDER BY Page DESC
+	LIMIT 1
+");
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such URI relevant to that page number. I have to figure out something better to do for this...";
