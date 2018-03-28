@@ -41,6 +41,7 @@ if ( $o_results->num_rows > 0 ) {
 $o_results = $o_mysql_connection->query("
 	SELECT Content from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
 	WHERE Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+	AND Type = 'page'
 	ORDER BY Page DESC
 	LIMIT 1
 ");
@@ -55,22 +56,25 @@ $v_content = $a_row['Content'];
 // Create the variables that will store the head, the body, and any errors
 $out_head = "<html>\n<head>\n";
 $out_body = '';
-$out_error = "<!--\n";
+$out_error = "";
 
 // split the contents by line and parse them into an object
 $a_content_list = preg_split( "/(\r)?\n/", $v_content );
-list( $v_full_style, $o_content, $v_errors ) = fn_parse_content ($a_content_list);
-$out_error .= $v_errors;
+list( $o_content, $v_errors ) = fn_parse_content( $a_content_list, true );
+$out_error .= $v_errors . "<!--\n";
+$v_full_style = $o_content['style'];
 
 // pull the full style
-$o_results = $o_mysql_connection->query("
+$v_query = "
 	SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
 	WHERE Type = 'full'
 	AND Name = '" . $o_mysql_connection->real_escape_string($v_full_style) . "'
 	AND Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
 	ORDER BY Page DESC
 	LIMIT 1
-");
+";
+
+$o_results = $o_mysql_connection->query( $v_query );
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such full page style. I have to figure out something better to do for this...";

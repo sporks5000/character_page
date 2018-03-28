@@ -114,7 +114,6 @@ Styles and, to some extent, items are created with HTML code. in order to get th
 
 Regular command keywords:
 * >>> var [VARIABLE NAME] - a variable to be interpreted by the script
-* >>> comment [TEXT] - a comment that won't be interpreted y the parser
 * >>> link [ITEM NAME] - an item name to convert into a URL
 * >>> ilink [ITEM NAME] [TEXT] - Convert this to a link that will be opened in the iframe
 * >>> plink [TEXT] - Convert this to a link for the previous version of the current item
@@ -127,6 +126,7 @@ Regular command keywords:
 
 Indicate start or end positions
 * >>> repeat ["start" OR "end"] - (only in "section" and "full") Everything in between repeats for each section or item (if multiple starts are present before an end, they will be used in sequence and loop until all sections or items have been used) (cannot be used in "block" styles)
+* >>> comment ["start" OR "end"] - a comment that won't be interpreted by the parser.
 * >>> not_first ["start" OR "end"] - (only in "section", "full", and "block") Apply this to all items but the first
 * >>> not_last ["start" OR "end"] - (only in  "section", "full", and "block") Apply this to all items but the last
 * >>> is_first ["start" OR "end"] - (only in "section", "full", and "block") Apply this only to the first item
@@ -169,11 +169,16 @@ Note: Other than the following exceptions, all lines beginning with ">>>" will b
 
 Content is handled by a different parser than items and styles (though the headers and footers within content are an exception to this). Here are the special command keywords for parsing content:
 
-Special data for "content":
-* >>> style [FULL STYLE NAME] - the style for the page (should be declared before any styles or items)
-* >>> s_name [NAME ]- the name of the upcoming section (should be declared before the style) (There's no reason that this cannot contain any length of text or html)
-* >>> s_style [SECTION STYLE NAME] - the style of the upcoming section
-* >>> item [ITME NAME] - an item within the section
+* >>> block [BLOCK NAME] - The name of a content block. This line will be replaced by all lines within that content block
+* >>> style [FULL STYLE NAME] - Declares the "full" style for this content.
+* >>> sections [LIST OF SPACE SEPARATED SECTION ID's] - The list of the sections in the order that they will go in.
+* >>> section [SECTION ID] - An identifier for the section. Note that this won't be displayed and as such can be arbitrary, so long as none are repeated. This must be declared before any of the command keywords below.
+* >>> type [TYPE] - The items listed in this section will correlate to a type per the cp_types table
+* >>> s_name [STRING] - A display name for the section, referenced with the "SECTION_NAME" variable
+* >>> s_style [SECTION STYLE NAME] - The name of the style that will be used for the section
+* >>> items [LIST OF SPACE SEPARATED ITEMS] - The list of the items that will appear in this section, in the order that they will go in.
+* >>> header ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_HEAD" variable
+* >>> footer ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_FOOT" variable
 
 #==========================#
 #== Declaration Keywords ==#
@@ -212,7 +217,7 @@ These are variables that can be used with the command keyword "var":
 * DISP_NAME - The display name of an item (note, there's no rreason why this cannot contain html)
 * IMAGE - the image url for an item. These should be relative to the directory where index.php is located.
 * ITEM_DATA [NUMBER (starting with 1)] - Other data for the item, stored as an array. So, for example, if you want to have a variable for the age of characters.
-* SECTION_NAME - the display name of a section (note, there's no rreason why this cannot contain html)
+* SECTION_NAME - the display name of a section (note, there's no reason why this cannot contain html)
 * SOURCE_URL - the URL of the source page that this page is referencing
 * MAIN_EXT_URL - The URL of the main page of the source
 * MAIN_URL - the URL for the main page of this site (not the source site)
@@ -279,6 +284,180 @@ The iframe containing the single item view will be put in place with the ">>> co
 
 and the "src" attribute will be populated by javascript as needed.
 
+#=========================================#
+#== Transforming Content into an Object ==#
+#=========================================#
+
+--- Here's an example of what a block of content for a specific page might look like:
+
+>>>>> declare content 5 page
+>>> style style1_full
+>>> sections characters settings items
+>>> section characters
+>>> type character
+>>> s_name Characters
+>>> s_style style1_section
+>>> items steve sean
+>>> block head_foot
+>>> block setting_item
+
+>>>>> declare content 5 block head_foot
+>>> header start
+Header text
+>>> header end
+>>> footer start
+Footer text
+>>> footer end
+
+>>>>> declare content 5 block setting_item
+>>> section settings
+>>> type setting
+>>> s_name Settings
+>>> s_style style1_section
+>>> items steve_house
+>>> block head_foot
+>>> section items
+>>> type item
+>>> s_name Items
+>>> s_style style1_section
+>>> items washing_machine
+>>> block head_foot
+
+--- When all the blocks are assembled, it will look like this:
+
+>>> style style1_full
+>>> sections characters settings items
+>>> section characters
+>>> type character
+>>> s_name Characters
+>>> s_style style1_section
+>>> items steve sean
+>>> header start
+Header text
+>>> header end
+>>> footer start
+Footer text
+>>> footer end
+>>> section settings
+>>> type setting
+>>> s_name Settings
+>>> s_style style1_section
+>>> items steve_house
+>>> header start
+Header text
+>>> header end
+>>> footer start
+Footer text
+>>> footer end
+>>> section items
+>>> type item
+>>> s_name Items
+>>> s_style style1_section
+>>> items washing_machine
+>>> header start
+Header text
+>>> header end
+>>> footer start
+Footer text
+>>> footer end
+
+--- Parsed into an object:
+
+From there, the parser will transform it into an object that the script can traverse and pull the necessary information from when necessary. It will also pull the relevant item and section style data and integrate them into that object. If it were represented in JSON, that object would look like this:
+
+{
+	"style":"style1_full",
+	"order":[
+		"characters",
+		"settings",
+		"items"
+	],
+	"sections":{
+		"characters":{
+			"type":"character",
+			"name":"Characters",
+			"style":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
+			],
+			"header":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED HEADER TEXT"
+			],
+			"footer":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED FOOTER TEXT"
+			],
+			"order":[
+				"steve",
+				"sean"
+			],
+			"items":{
+				"steve":{
+					"page":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				},
+				"sean":{
+					"page":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				}
+			}
+		},
+		"settings":{
+			"type":"setting",
+			"name":"Settings",
+			"style":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
+			],
+			"header":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED HEADER TEXT"
+			],
+			"footer":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED FOOTER TEXT"
+			],
+			"order":[
+				"steve_house"
+			],
+			"items":{
+				"steve_house":{
+					"page":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				}
+			}
+		},
+		"items":{
+			"type":"item",
+			"name":"Items",
+			"style":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
+			],
+			"header":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED HEADER TEXT"
+			],
+			"footer":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED FOOTER TEXT"
+			],
+			"order":[
+				"washing_machine"
+			],
+			"items":{
+				"washing_machine":{
+					"page":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				}
+			}
+		}
+	}
+}
 
 
 
