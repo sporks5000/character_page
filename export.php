@@ -20,28 +20,31 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	require( $v_incdir . '/config.php' );
 	require( $v_incdir . '/connect.php' );
 
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		SELECT URI, Page from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names 
 		ORDER BY Page ASC
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare name " . $a_row['URI'] . " " . $a_row['Page'] . "\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		SELECT Name, Type from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types
 		ORDER BY Type ASC
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare type " . $a_row['Name'] . " " . $a_row['Type'] . "\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		SELECT Page, Content, Type, Name from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
 		ORDER BY Page ASC
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		if ( $a_row['Type'] == "block" ) {
 			$v_out .= ">>>>> declare content " . $a_row['Page'] . " block " . $a_row['Name'] . "\n" . $a_row['Content'] . "\n\n";
@@ -51,28 +54,31 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		SELECT Name, Page, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
 		ORDER BY Page ASC
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare item " . $a_row['Name'] . " " . $a_row['Page'] . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		SELECT Type, Name, Page, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
 		ORDER BY Page ASC
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare style " . $a_row['Name'] . " " . $a_row['Page'] . " " . $a_row['Type'] . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		SELECT URI, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents
 		ORDER BY URI ASC
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare document " . $a_row['URI'] . "\n" . $a_row['Description'] . "\n\n";
 	}

@@ -2,10 +2,11 @@
 
 $v_document_uri = preg_replace( '/^' . preg_quote( BASE_URI, "/" ) . '/', '/', $_SERVER['REQUEST_URI'] );
 
-$o_results = $o_mysql_connection->query("
+$v_query = "
 	SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents
 	WHERE URI='" . $o_mysql_connection->real_escape_string($v_document_uri) . "'
-");
+";
+$o_results = $o_mysql_connection->query( $v_query );
 if ( $o_results->num_rows == 0 ) {
 	// #####
 	echo "No such document. I have to figure out something better to do for this...";

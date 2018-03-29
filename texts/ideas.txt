@@ -1,19 +1,13 @@
 1)  Modify the single-item view so that it loads next and previous pages in the background before displaying them?
 2)  Cookies and session data? <- maybe storing the highest seen current page in the session data and not letting the next and previous links for full pages extend beyond that?
-3)  A page that lists all items of a certain type at the current point in the story. (or maybe shows 25 at a time?)
-	1)  The url for this needs to be in the following format: /lists/[TYPE NAME]/[PAGE NUMBER] - example: /lists/characters/40
-	2)  There needs to be a constant in the config for "lists" the same way that there's a variable for "pages".
-4)  html for confusing lines is parsed in import.php - I need to make it so that it's not parsed.
-5)  In fn_parse_descriptions, I should comment what each of the variables does. 'cause there are a lot of 'em.
-6)  Links to a source page with a specific URI
-7)  Add the code for section headers and footers
-8)  Go through all the #####
+3)  html for confusing lines is parsed in import.php - I need to make it so that it's not parsed.
+4)  In fn_parse_descriptions, I should comment what each of the variables does. 'cause there are a lot of 'em.
+5)  Go through all the #####
+6)  A 404 page
+7)  When defining anything that requires a page number, instead require the URI, then the import process should convert the URI to a page number
+	1)  Similarly, the export process should convert the page number back to a URI
 
---- Additional variables that I need to make
-* SECTION_HEAD - the parsed content of the section header
-* SECTION_FOOT - the parsed content of the section footer
-* LIST_URL - the URL for the list of this type
-* SOURCE_URI [URI] - creates a URL in the format of: PROTOCOL . "://" . REFERER_BASE . [THE URI PROVIDED]
+
 
 
 

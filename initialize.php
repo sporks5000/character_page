@@ -30,56 +30,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 	require( $v_incdir . '/connect.php' );
 
-	$o_results = $o_mysql_connection->query( "
+	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names (
-			URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2) 
+			URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2), Next FLOAT(8.2), Previous FLOAT(8.2)
 		)
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	if ( $o_mysql_connection->errno ) {
 		echo "Failed to create \"names\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 		exit;
 	}
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents (
-			Page FLOAT(8.2), Content MEDIUMTEXT, Type TINYTEXT, Name VARCHAR(100), PRIMARY KEY ( Name, Page )
+			Page FLOAT(8.2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, Page, Type )
 		)
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	if ( $o_mysql_connection->errno ) {
 		echo "Failed to create \"contents\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 		exit;
 	}
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items (
 			Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, Next FLOAT(8.2), Previous FLOAT(8.2), PRIMARY KEY ( Name, Page )
 		)
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	if ( $o_mysql_connection->errno ) {
 		echo "Failed to create \"items\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 		exit;
 	}
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles ( 
 			Type TINYTEXT, Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) 
 		)
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	if ( $o_mysql_connection->errno ) {
 		echo "Failed to create \"items\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 		exit;
 	}
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types (
 			Name VARCHAR(100), Type VARCHAR(100), PRIMARY KEY ( Name, Type )
 		)
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	if ( $o_mysql_connection->errno ) {
 		echo "Failed to create \"types\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 		exit;
 	}
-	$o_results = $o_mysql_connection->query("
+	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents (
 			URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT
 		)
-	");
+	";
+	$o_results = $o_mysql_connection->query( $v_query );
 	if ( $o_mysql_connection->errno ) {
 		echo "Failed to create \"documents\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
 		exit;

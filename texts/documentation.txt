@@ -25,9 +25,11 @@ Note: This project does not include any process for uploading files to the serve
 #== Database Information ==#
 #==========================#
 
-Table1 (cp_names): two columns - compares the URI to a post number
+Table1 (cp_names): four columns - compares the URI to a post number
         a URI
         a page number (not necessarily incrimenting)
+	the number of the page immediately after this one
+	the number of the page immediately before this one
 Table2 (cp_contents): four columns - a list of content that we'll be working from for each page
         a number that corralates to table1
         text describing categories and content items for those categories
@@ -53,8 +55,8 @@ Table6 (cp_documents): two columns - single webpages, such as a main page or a "
 
 The commands to create these databases look like this:
 
-CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2) );
-CREATE TABLE IF NOT EXISTS cp_contents ( Page FLOAT(8.2), Content MEDIUMTEXT, Type TINYTEXT, Name VARCHAR(100), PRIMARY KEY ( Name, Page ) );
+CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2), Next FLOAT(8.2), Previous FLOAT(8.2) );
+CREATE TABLE IF NOT EXISTS cp_contents ( Page FLOAT(8.2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, Page, Type ) );
 CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, Next FLOAT(8.2), Previous FLOAT(8.2), PRIMARY KEY ( Name, Page ) );
 CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
 CREATE TABLE IF NOT EXISTS cp_types ( Name VARCHAR(100), Type VARCHAR(100), PRIMARY KEY ( Name, Type ) );
@@ -78,7 +80,7 @@ The idea is that the config file will only have the username and password of the
 #== General Rules ==#
 #===================#
 
-* All styles and items MUST have internal names without spaces or tabs, given that the parsing is done based on whitespace.
+* All styles, items, types, etc. MUST have internal names without spaces, tabs, slashes, questionmarks, or ampersands. Parsing is occasionally done by all of these characters, so using them in that manner may result in unexpected behaviors.
 
 #=======================#
 #== Config Directives ==#
@@ -94,6 +96,7 @@ The idea is that the config file will only have the username and password of the
 * BASE_URI - The base URI for THIS site (not the source site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; if you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"
 * TABLE_PREFIX - You usually won't need to chane this from "cp_", but really, this can be what ever you want.
 * PAGE_DIR - The directory that you want indvidual pages to be referenced at. So, if you want the character page for pagge 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".
+* LIST_DIR - Same as "PAGE_DIR" above, except for list views.
 
 #=====================#
 #== Types of Styles ==#
@@ -119,6 +122,8 @@ Regular command keywords:
 * >>> plink [TEXT] - Convert this to a link for the previous version of the current item
 * >>> nlink [TEXT] - Convert this to a link for the next version of the current item (only on single item view)
 * >>> content - the next level of content in the "full"->"section"->"item" chain, or the iframe for "full" styles that single pages will go into. (cannot be used in "block" styles)
+* >>> section_head - parses and outputs the content of the section header
+* >>> section_foot - parses and outputs the content of the section footer
 * >>> block [STYLE NAME] - used to call a block style.
 * >>> no_new_line - prevents the output from the previous line ending in a new line character. Useful for some spacing weirdness
 * >>> set [NUMBER] [TEXT] - allows a usert to associate a number with a string and then later use the "SET" variable to recall that string.
@@ -171,14 +176,14 @@ Content is handled by a different parser than items and styles (though the heade
 
 * >>> block [BLOCK NAME] - The name of a content block. This line will be replaced by all lines within that content block
 * >>> style [FULL STYLE NAME] - Declares the "full" style for this content.
-* >>> sections [LIST OF SPACE SEPARATED SECTION ID's] - The list of the sections in the order that they will go in.
-* >>> section [SECTION ID] - An identifier for the section. Note that this won't be displayed and as such can be arbitrary, so long as none are repeated. This must be declared before any of the command keywords below.
-* >>> type [TYPE] - The items listed in this section will correlate to a type per the cp_types table
+* >>> sections [LIST OF SPACE SEPARATED SECTION ID's] - (only within "page" and "block" types) The list of the sections in the order that they will go in.
+* >>> section [SECTION ID] - (only within "page" and "block" types) An identifier for the section. Note that this won't be displayed and as such can be arbitrary, so long as none are repeated. This must be declared before any of the command keywords below.
+* >>> type [TYPE] - (only within "page" and "block" types) The items listed in this section will correlate to a type per the cp_types table
 * >>> s_name [STRING] - A display name for the section, referenced with the "SECTION_NAME" variable
 * >>> s_style [SECTION STYLE NAME] - The name of the style that will be used for the section
-* >>> items [LIST OF SPACE SEPARATED ITEMS] - The list of the items that will appear in this section, in the order that they will go in.
-* >>> header ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_HEAD" variable
-* >>> footer ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "SECTION_FOOT" variable
+* >>> items [LIST OF SPACE SEPARATED ITEMS] - (only within "page" and "block" types) The list of the items that will appear in this section, in the order that they will go in.
+* >>> header ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "section_head" command keyword
+* >>> footer ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "section_foot" command keyword
 
 #==========================#
 #== Declaration Keywords ==#
@@ -187,16 +192,16 @@ Content is handled by a different parser than items and styles (though the heade
 The script can import text content into the database. For this process, what kind of internal object (style, name, content, item, or type) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string ">>>>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line.
 
 Creation:
-* >>>>> declare name [URL] [PAGE]
-* >>>>> declare content [PAGE] [TYPE ("page", "list", or "block")] [NAME (only necessary for block, otherwise will be ignored)] (after this, a new line followed by the desired content
+* >>>>> declare name [URI] [PAGE]
+* >>>>> declare content [PAGE] [TYPE ("page", "list", or "block")] [NAME (see details below)] (after this, a new line followed by the desired content
 * >>>>> declare style [NAME] [PAGE] [TYPE ("full", "section", "single", or "block")] (after this, a new line followed by the desired content)
 * >>>>> declare item [NAME] [PAGE] (after this, a new line followed by the desired content)
 * >>>>> declare type [NAME] [TYPE]
 * >>>>> declare document [URI] (after this, a new line followed by the desired content)
 
 Deletion:
-* >>>>> delete name [URL]
-* >>>>> delete content [PAGE] [NAME (only necessary for block, otherwise will be ignored)]
+* >>>>> delete name [URI]
+* >>>>> delete content [PAGE] [TYPE ("page", "list", or "block")] [NAME (see details below)]
 * >>>>> delete style [NAME] [PAGE]
 * >>>>> delete item [NAME] [PAGE]
 * >>>>> delete type [NAME] [TYPE]
@@ -204,8 +209,11 @@ Deletion:
 
 Notes:
 * The "name" field for content, styles, items, and types AND the "type" field for content, styles, and types CANNOT contain whitespace, as the parsing process separates these details out by whitespace.
-* For "content", "cp_page_con" and "cp_list_con" are exempt from being used as names, as they will be the names populated for non block content. Inversely, when ever deleting "page" or "list" content types, you will need to specify "cp_page_con" or "cp_list_con" as appropriate for the name
-* For "Type", there's no reason why you can't specify one item as being multiple different types. For example, you might choose to make a talking sword both type "item" and type "character".
+* For "content":
+	* For type "page", the "name" field should not be used either in creation or deletion.
+	* For type "list", the "name" field has to match the item category that's being displayed
+	* for type "block", the "name" field can be what ever you want
+* For "type", there's no reason why you can't specify one item as being multiple different types. For example, you might choose to make a talking sword both type "item" and type "character".
 
 #========================#
 #== Internal Variables ==#
@@ -219,8 +227,10 @@ These are variables that can be used with the command keyword "var":
 * ITEM_DATA [NUMBER (starting with 1)] - Other data for the item, stored as an array. So, for example, if you want to have a variable for the age of characters.
 * SECTION_NAME - the display name of a section (note, there's no reason why this cannot contain html)
 * SOURCE_URL - the URL of the source page that this page is referencing
+* SOURCE_URI [URI] - creates a URL in the format of: PROTOCOL . "://" . REFERER_BASE . [THE URI PROVIDED]
 * MAIN_EXT_URL - The URL of the main page of the source
 * MAIN_URL - the URL for the main page of this site (not the source site)
+* LIST_URL - the URL for the list of this type
 * SECT_NUM - the number of the current section (counting starts at zero)
 * ITEM_NUM - The number of the current item in the current section (counting starts at zero)
 * NEXT_INT_PAGE - (Not available for single styles) the URL of the next internal page
@@ -248,6 +258,10 @@ Files that are included within the project:
 * includes/js_bottom_full.txt - additional text for the full page view pages containing the javascript that makes the links work
 * includes/parse2.php - Includes the functions necessaary to parse database content
 * includes/document.php - The processes necessary for loading a document.
+* includes/uri_convert.php - The process that takes the referrer URI and converts it into a page number
+* includes/final_full.php - Finishes out the process of displaying pages and lists.
+* texts/documentation.txt - The documentation for this project
+* texts/ideas.txt - Ideas for the project that have not yet been implimented.
 
 #===============================#
 #== Internally Generated HTML ==#
