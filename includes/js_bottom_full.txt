@@ -19,7 +19,7 @@
 	function fn_open_link(clicked) {
 	// when a link is clicked, open it in an iframe
 		var link = $(clicked);
-		var href = link.attr('src');
+		var href = link.attr('href');
 		var overlayTop = $(document).scrollTop();
 		overlayTop = overlayTop - 5;
 		pageBody.css("overflow", "hidden").css('padding-right',scrollbarWidth + 'px');

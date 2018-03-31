@@ -12,6 +12,24 @@ $v_out = '';
 $v_rootdir = dirname( __FILE__ );
 $v_incdir = $v_rootdir . '/includes';
 
+function fn_minimize_page ( $v_page ) {
+	if ( preg_match( '/\.00$/', $v_page ) ) {
+		$v_page = substr( $v_page, 0, -3 );
+	} elseif ( preg_match( '/\..0$/', $v_page ) ) {
+		$v_page = substr( $v_page, 0, -1 );
+	}
+	return $v_page;
+}
+
+function fn_type_page ( $v_page, $v_pos ) {
+	if ( $v_pos = "start" && $v_page = 0 ) {
+		$v_page = "_";
+	} elseif ( $v_pos = "end" && $v_page = "999999.99" ) {
+		$v_page = "_";
+	}
+	return $v_page;
+}
+
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	// use the username and password from the POST data
 	$v_db_alt_user = $_POST['user'];
@@ -26,17 +44,18 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare name " . $a_row['URI'] . " " . $a_row['Page'] . "\n";
+		
+		$v_out .= ">>>>> declare name " . $a_row['URI'] . " " . fn_minimize_page($a_row['Page']) . "\n";
 	}
 	$v_out .= "\n\n\n";
 
 	$v_query = "
-		SELECT Name, Type from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types
+		SELECT Name, Type, Start, End from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types
 		ORDER BY Type ASC
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare type " . $a_row['Name'] . " " . $a_row['Type'] . "\n";
+		$v_out .= ">>>>> declare type " . $a_row['Name'] . " " . $a_row['Type'] . " " . fn_type_page($a_row['Start'], 'start') . " " . fn_type_page($a_row['End'], 'end') . "\n";
 	}
 	$v_out .= "\n\n\n";
 
@@ -47,9 +66,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		if ( $a_row['Type'] == "block" ) {
-			$v_out .= ">>>>> declare content " . $a_row['Page'] . " block " . $a_row['Name'] . "\n" . $a_row['Content'] . "\n\n";
+			$v_out .= ">>>>> declare content " . fn_minimize_page($a_row['Page']) . " block " . $a_row['Name'] . "\n" . $a_row['Content'] . "\n\n";
 		} else {
-			$v_out .= ">>>>> declare content " . $a_row['Page'] . " " . $a_row['Type'] . "\n" . $a_row['Content'] . "\n\n";
+			$v_out .= ">>>>> declare content " . fn_minimize_page($a_row['Page']) . " " . $a_row['Type'] . "\n" . $a_row['Content'] . "\n\n";
 		}
 	}
 	$v_out .= "\n\n\n";
@@ -60,7 +79,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare item " . $a_row['Name'] . " " . $a_row['Page'] . "\n" . $a_row['Description'] . "\n\n";
+		$v_out .= ">>>>> declare item " . $a_row['Name'] . " " . fn_minimize_page($a_row['Page']) . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
@@ -70,7 +89,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare style " . $a_row['Name'] . " " . $a_row['Page'] . " " . $a_row['Type'] . "\n" . $a_row['Description'] . "\n\n";
+		$v_out .= ">>>>> declare style " . $a_row['Name'] . " " . fn_minimize_page($a_row['Page']) . " " . $a_row['Type'] . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 

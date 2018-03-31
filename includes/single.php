@@ -47,12 +47,17 @@ $out_body = '';
 $out_error = "<!--\n";
 
 list( $v_body, $v_error, $v_head, $v_iframe ) = fn_parse_descriptions( $a_single_style_list, 'single' );
-// ##### This is where I need to add the fancy bits for the iframe
+
+$out_head .= file_get_contents( $v_incdir . '/js_single.txt' );
 
 $out_body .= $v_body . "</body>\n</html>";
 $out_error .= $v_error . "-->\n";
 $out_head .= $v_head . "</head>\n";
 
-echo $out_head . $out_error . $out_body;
+if ( $_GET['only_body'] ) {
+	echo $out_body;
+} else {
+	echo $out_head . $out_error . $out_body;
+}
 
 exit;

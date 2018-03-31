@@ -1,0 +1,26 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script>
+	var pageBody;
+	$(document).ready(function() {
+		pageBody = $("body");
+	});
+	function fn_open_link(clicked) {
+	// when a link is clicked, open it in the background and then remove the old content
+		var link = $(clicked);
+		var href = link.attr('href') + "&only_body=true";
+		// includes/single.php allows the page to output differently when "only_body=true" is passed as part of the GET request
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.onreadystatechange = function() {
+			if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
+				var response = xmlHttp.responseText;
+				var responseDom = $(response);
+				// remove the parts of the page that we don't need anymore
+				pageBody.children().remove();
+				// And replace them with the parts that were requested.
+				pageBody.append(responseDom);
+			}
+		};
+		xmlHttp.open("GET", href, true);
+		xmlHttp.send(null);
+	}
+</script>

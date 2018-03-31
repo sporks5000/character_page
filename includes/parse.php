@@ -10,6 +10,7 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 	global $v_page;
 	global $o_mysql_connection;
 	global $v_item_type;
+	global $v_show_parse_level;
 	foreach ( $a_content_list as &$v_line ) {
 		if ( preg_match( '/^\s*>>>\s+(items|block|s_style)\s+(.*)$/', $v_line, $a_match ) ) {
 			$a_arguments = preg_split( "/\s+/", $a_match[2] );
@@ -92,6 +93,8 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 				GROUP BY Name
 			) b ON a.Name = b.Name AND a.Page = b.Page
 			WHERE " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.Type = '" . $o_mysql_connection->real_escape_string($v_item_type) . "'
+			AND " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.Start <= '" . $o_mysql_connection->real_escape_string($v_page) . "'
+			AND " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.End >= '" . $o_mysql_connection->real_escape_string($v_page) . "'
 			ORDER BY Name ASC
 		";
 		$o_results = $o_mysql_connection->query( $v_query );
@@ -214,10 +217,10 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 					}
 				}
 			} elseif ( $a_match[1] == "header" ) {
-				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
+				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list_expanded, $c_lines, $a_match[1] );
 				$o_content['sections'][$v_cur_section]['header'] = $a_out;
 			} elseif ( $a_match[1] == "footer" ) {
-				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
+				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list_expanded, $c_lines, $a_match[1] );
 				$o_content['sections'][$v_cur_section]['footer'] = $a_out;
 			} elseif ( ! preg_match( '/^\s*>>>\s+[^\s]+\s+end\s*$/', $v_line ) ) {
 				$v_error .= "Error: " . $v_line . "\n";
@@ -274,6 +277,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	global $v_show_parse_level;
 	global $v_next_int_page;
 	global $v_prev_int_page;
+	global $v_source_uri;
 
 	if ( $v_main_type == "" ) {
 		$v_main_type = $v_type;
@@ -285,7 +289,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	} elseif ( $v_type == "single" && ! $v_description ) {
 		$v_single_style = $v_style;
 		$v_current_item = $v_item;
-		list( $b_is_prev, $v_previous_page, $b_is_next, $v_next_page, $a_item_text ) = fn_request_item( $v_current_item, $v_page );
+		list( $b_is_prev, $v_previous_page, $b_is_next, $v_next_page, $a_item_text ) = fn_request_item( $v_current_item, $v_page, $v_current );
 		$v_description = '';
 		$v_disp_name = '';
 		$v_disp_image = '';
@@ -347,15 +351,22 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out .= $c_sections;
 				} elseif ( $a_match[4] == "ITEM_NUM" ) {
 					$out .= $c_items;
-				} elseif ( $a_match[4] == "NEXT_INT_PAGE" ) {
+				} elseif ( $a_match[4] == "NEXT_PAGE" ) {
 					$out .= $v_next_int_page;
-				} elseif ( $a_match[4] == "PREV_INT_PAGE" ) {
+				} elseif ( $a_match[4] == "PREV_PAGE" ) {
 					$out .= $v_prev_int_page;
 				} elseif ( $a_match[4] == "CONSTANT" ) {
 					$variable = preg_replace( '/^\s*>>>\s+var\s+CONSTANT\s+([^\s]+).*$/', '$1', $a_match[0] );
 					$out .= $a_constant[$variable];
 				} elseif ( $a_match[4] == "LIST_URL" ) {
-					$out .= BASE_URI . LIST_DIR . $o_content['sections'][$v_section_id]['type'] . "/" . $v_page;
+					$variable = preg_replace( '/^\s*>>>\s+var\s+CONSTANT\s+([^\s]+).*$/', '$1', $a_match[0] );
+					if ( $variable != $a_match[0] ) {
+						$out .= BASE_URI . LIST_DIR . $variable . "/" . $v_source_uri;
+					} else {
+						$out .= BASE_URI . LIST_DIR . $o_content['sections'][$v_section_id]['type'] . "/" . $v_source_uri;
+					}
+				} elseif ( $a_match[4] == "PAGE_URL" ) {
+					$out .= BASE_URI . PAGE_DIR . $v_source_uri;
 				} elseif ( $a_match[4] == "SOURCE_URI" ) {
 					$variable = preg_replace( '/^\s*>>>\s+var\s+SOURCE_URI\s+([^\s]+).*$/', '$1', $a_match[0] );
 					$out .= PROTOCOL . "://" . REFERER_BASE . $variable;
@@ -413,11 +424,10 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				$link_text = preg_replace( '/^' . preg_quote( $a_match[4] ) . '\s+/', '', $a_match[3] );
 				if ( $v_main_type != "single" ) {
 					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_current . '&style=' . $v_single_style;
-					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
 				} else {
 					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_page . '&style=' . $v_single_style;
-					$out .= '<a class="cp_link" href="' . $link . '">' . $link_text . "</a>\n";
 				}
+				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
 			} elseif ( $a_match[1] == "no_new_line" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
@@ -442,11 +452,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out =& $v_body;
 				}
 				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_previous_page . '&style=' . $v_single_style;
-				if ( $v_main_type != "single" ) {
-					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
-				} else {
-					$out .= '<a class="cp_link" href="' . $link . '">' . $a_match[3] . "</a>\n";
-				}
+				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				unset( $out );
 			} elseif ( $a_match[1] == "repeat" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
@@ -499,9 +505,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$b_iframe = false;
 				}
 			} elseif ( $a_match[1] == "section_head" && isset( $v_section_id ) ) {
-				fn_parse_descriptions( $o_content['section'][$v_section_id]['header'], 'section' );
+				fn_parse_descriptions( $o_content['sections'][$v_section_id]['header'], 'section' );
 			} elseif ( $a_match[1] == "section_foot" ) {
-				fn_parse_descriptions( $o_content['section'][$v_section_id]['footer'], 'section' );
+				fn_parse_descriptions( $o_content['sections'][$v_section_id]['footer'], 'section' );
 			} elseif ( $a_match[1] == "nlink" && $v_main_type != "document" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
@@ -513,11 +519,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out =& $v_body;
 				}
 				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_next_page . '&style=' . $v_single_style;
-				if ( $v_main_type != "single" ) {
-					$out .= '<a class="cp_link" href="#" src="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
-				} else {
-					$out .= '<a class="cp_link" href="' . $link . '">' . $a_match[3] . "</a>\n";
-				}
+				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				unset( $out );
 			} elseif ( $a_match[1] == "comment" && $a_match[4] == "start" ) {
 				// Just skip past these lines
@@ -676,7 +678,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	return array( $v_body, $v_error, $v_head, $v_iframe );
 }
 
-function fn_request_item( $v_current_item, $v_page ) {
+function fn_request_item( $v_current_item, $v_page, $v_current ) {
 	global $o_mysql_connection;
 	$v_query = "
 		SELECT Page, Description, Next, Previous from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
@@ -697,7 +699,7 @@ function fn_request_item( $v_current_item, $v_page ) {
 	$b_is_prev = false;
 	$v_next_page = '';
 	$v_previous_page = '';
-	if ( ! is_null( $a_item_data['Next'] ) ) {
+	if ( ! is_null( $a_item_data['Next'] ) && $a_item_data['Next'] <= $v_current ) {
 		$b_is_next = true;
 		$v_next_page = $a_item_data['Next'];
 	}

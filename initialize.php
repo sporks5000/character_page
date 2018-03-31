@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names (
-			URI VARCHAR(100) PRIMARY KEY, Page FLOAT(8.2), Next FLOAT(8.2), Previous FLOAT(8.2)
+			URI VARCHAR(100) PRIMARY KEY, Page DECIMAL(8,2), Next DECIMAL(8,2), Previous DECIMAL(8,2)
 		)
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents (
-			Page FLOAT(8.2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, Page, Type )
+			Page DECIMAL(8,2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, Page, Type )
 		)
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items (
-			Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, Next FLOAT(8.2), Previous FLOAT(8.2), PRIMARY KEY ( Name, Page )
+			Name VARCHAR(100), Page DECIMAL(8,2), Description LONGTEXT, Next DECIMAL(8,2), Previous DECIMAL(8,2), PRIMARY KEY ( Name, Page )
 		)
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles ( 
-			Type TINYTEXT, Name VARCHAR(100), Page FLOAT(8.2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) 
+			Type TINYTEXT, Name VARCHAR(100), Page DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) 
 		)
 	";
 	$o_results = $o_mysql_connection->query( $v_query );
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 	$v_query = "
 		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types (
-			Name VARCHAR(100), Type VARCHAR(100), PRIMARY KEY ( Name, Type )
+			Name VARCHAR(100), Type VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Type )
 		)
 	";
 	$o_results = $o_mysql_connection->query( $v_query );

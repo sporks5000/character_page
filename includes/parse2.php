@@ -178,13 +178,28 @@ function fn_parse_import ( $a_import_text ) {
 				$o_results = $o_mysql_connection->query( $v_query );
 				$v_success .= "<li>item: " . $a_arguments[0] . " | " . $a_arguments[1] . "</li>\n";
 			} elseif ( $a_match[1] == 'type' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
+				$v_start = "0";
+				$v_end = "999999.99";
+				if ( isset( $a_arguments[2] ) && preg_match( '/^[0-9.]+$/', $a_arguments[2] ) ) {
+					$v_start = $a_arguments[2];
+				}
+				if ( isset( $a_arguments[3] ) && preg_match( '/^[0-9.]+$/', $a_arguments[3] ) ) {
+					$v_end = $a_arguments[3];
+				}
 				$v_query = "
-					INSERT INTO " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types (Name, Type)
-					VALUES ('" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "','" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "')
-					ON DUPLICATE KEY UPDATE Type='" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "'
+					INSERT INTO " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types (Name, Type, Start, End)
+					VALUES (
+						'" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "',
+						'" . $o_mysql_connection->real_escape_string($a_arguments[1]) . "',
+						'" . $o_mysql_connection->real_escape_string($v_start) . "',
+						'" . $o_mysql_connection->real_escape_string($v_end) . "'
+					)
+					ON DUPLICATE KEY UPDATE
+						Start = '" . $o_mysql_connection->real_escape_string($v_start) . "',
+						End = '" . $o_mysql_connection->real_escape_string($v_end) . "'
 				";
 				$o_results = $o_mysql_connection->query( $v_query );
-				$v_success .= "<li>type: " . $a_arguments[0] . " | " . $a_arguments[1] . "</li>\n";
+				$v_success .= "<li>type: " . $a_arguments[0] . " | " . $a_arguments[1] . " | " . $v_start . " | " . $v_end . "</li>\n";
 			} elseif ( $a_match[1] == 'document' && isset( $a_arguments[0] ) ) {
 				list( $v_out, $c_lines ) = fn_extract_lines2( $a_import_text, $c_lines );
 				$v_query = "

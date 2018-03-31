@@ -1,13 +1,9 @@
-1)  Modify the single-item view so that it loads next and previous pages in the background before displaying them?
-2)  Cookies and session data? <- maybe storing the highest seen current page in the session data and not letting the next and previous links for full pages extend beyond that?
-3)  html for confusing lines is parsed in import.php - I need to make it so that it's not parsed.
-4)  In fn_parse_descriptions, I should comment what each of the variables does. 'cause there are a lot of 'em.
-5)  Go through all the #####
-6)  A 404 page
-7)  When defining anything that requires a page number, instead require the URI, then the import process should convert the URI to a page number
-	1)  Similarly, the export process should convert the page number back to a URI
-
-
-
-
-
+1)  when import.php encounters a confusing line, it outputs that line. If that line contains html, that html is parsed. What can I do to make sure that this is not parsed and that the actual line text is displayed?
+2)  In fn_parse_descriptions, I should comment what each of the variables does. 'cause there are a lot of 'em.
+3)  Go through all the #####
+4)  A 404 page
+5)  declare and delete "upage" "uitem" and "ucontent" - takes uri instead of page number and then queries to replace uri with page before importing into the database
+	1)  check box within export.php for whether to output in pages or URIs.
+6)  example material
+7)  Better error checking for importing and deleting
+8)  Change all database references of "page" to "ID" instead; Change all references to the "type" database to "category" instead.
