@@ -243,18 +243,17 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_description = ''; //text for item descriptions
 
 	static $v_main_type = ''; //When this function is first called, what is the value of $v_type
-	static $a_section_content = array();
 	static $v_section_id = ''; // the internal name of the section that we're working with currently.
 	static $v_current_item = ''; // the name of the current item that we are working with
-	static $v_disp_name = '';
-	static $v_disp_image = '';
+	static $v_disp_name = ''; // the display name set within the item object
+	static $v_disp_image = ''; // the image url set within the item object
 	static $v_max_section_num = ''; // the array position of the last section (counted starting with zero)
 	static $v_max_item_num = ''; //the array position of the last item within this section (counted starting with zero)
 	static $a_item_data = array(); // This is where other item variables are stored
 	static $a_set = array(); // This allows us to set varaibles using the "set" command keyword
 	static $a_constant = array(); // an array where the end user can set a value ONCE and it will never change
-	static $a_document_list = array();
-	static $a_style_blocks = array();
+	static $a_document_list = array(); // the content for a document. This needs to be handled differently, thus it has its own variable.
+	static $a_style_blocks = array(); // an array of style blocks that have already been queried for so that they will not have to be queried for
 	static $v_previous_page = ''; // what is the number of the previous page for this item
 	static $v_next_page = ''; // what is the number of the next page for this item (only in single view)
 	static $v_single_style = ''; // When parsing a full page view, what is the requested single style?
@@ -265,19 +264,20 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $b_is_next = false; // whether or not there is a next version of this item (that's available)
 	static $c_sections = -1; // a count of which section we're currently on
 	static $c_items = 0; // a count of which item we're currently on within that section
+
 	global $o_mysql_connection;
 	global $o_content; // the object that all content and item data is stored in
 	global $v_page; // The page number that's being requested
-	global $v_source_url;
+	global $v_source_url; //the url for the source page
+	global $v_source_uri; // the uri portion for the source page
 	global $v_main_page;
 	global $v_relative_path;
 	global $v_current; // for single item views, the page number that is considered "current" (not necessarily the page number being requested)
-	global $v_item; //for single item views, what is the name of the item
+	global $v_item; // for single item views, what is the name of the item
 	global $v_style;
 	global $v_show_parse_level;
 	global $v_next_int_page;
 	global $v_prev_int_page;
-	global $v_source_uri;
 
 	if ( $v_main_type == "" ) {
 		$v_main_type = $v_type;

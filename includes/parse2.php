@@ -210,7 +210,7 @@ function fn_parse_import ( $a_import_text ) {
 				$o_results = $o_mysql_connection->query( $v_query );
 				$v_success .= "<li>document: " . $a_arguments[0] . "</li>\n";
 			} else {
-				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . $v_line . "</li>\n";
+				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . preg_replace( '/</', '&lt;', preg_replace( '/&lt;/', '&amp;lt;', $v_line ) ) . "</li>\n";
 			}
 			if ( $o_mysql_connection->errno ) {
 				echo "Failed import data: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
@@ -344,7 +344,7 @@ function fn_parse_import ( $a_import_text ) {
 				$o_results = $o_mysql_connection->query( $v_query );
 				$v_delete .= "<li>document: " . $a_arguments[0] . "</li>\n";
 			} else {
-				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . $v_line . "</li>\n";
+				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . preg_replace( '/</', '&lt;', preg_replace( '/&lt;/', '&amp;lt;', $v_line ) ) . "</li>\n";
 			}
 			if ( $o_mysql_connection->errno ) {
 				echo "Failed import data: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
@@ -352,7 +352,7 @@ function fn_parse_import ( $a_import_text ) {
 			}
 
 		} elseif ( $v_line != "" ) {
-			$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . $v_line . "</li>\n";
+			$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . preg_replace( '/</', '&lt;', preg_replace( '/&lt;/', '&amp;lt;', $v_line ) ) . "</li>\n";
 		}
 	}
 	if ( $v_success ) {
