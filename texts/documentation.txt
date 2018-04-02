@@ -26,8 +26,8 @@ In order to accomplish what's described above, we need to define and explain a n
 * "items"
 	Items are anything from the story that you want to reference. Characters, settings, objects, art styles, reoccuring themes, author's notes, etc. The item object contains details about the item in question including a description, an image url, and various other variables.
 
-* "types"
-	It's convenient to be able to group items into categories. This is what types accomplish. these categories can be as broad ("characters" and "settings" for example) or narrow ("Possessions that Gary has kept in his left pocket") as you want them to be. An item can belong to multiple types or no type at all, and you can set a start and end page number for whent hey belong to that type.
+* "categories"
+	It's convenient to be able to group items into categories. These categories can be as broad ("characters" and "settings" for example) or narrow ("Possessions that Gary currently has in his left pocket") as you want them to be. An item can belong to multiple categories or no category at all, and you can set a start and end page ID for when they belong to that category.
 
 * "styles"
 	Having items is all well and good, but you need a way to display them. This is what styles accomplish. They're blocks of html code interspersed with command keywords in order to make them more versatile. For an explanation of the different types of styles, see the "Types of Styles" section below.
@@ -36,9 +36,9 @@ In order to accomplish what's described above, we need to define and explain a n
 	So "items" are the information we're presenting and "styles" are the templates that outline how to present those items. The one thing that we're missing is how to know which items and styles to present at any given time. That's what "contents" do - they outline the styles and items and what order to present them in, as well as some details relevant how we want those styles to be presented.
 
 * "pages" and "lists"
-	Generally, there are two separate ways to think of the characters and items within a story: What items of all types are present right now, and what items of a single type have we been introduced to so far.
+	Generally, there are two separate ways to think of the characters and items within a story: What items of all categories are present right now, and what items of a single category have we been introduced to so far.
 	The idea for "pages" is that they would serve to fit the first of those to perspectives - they show all of the items that are present or relevant to the current bits of the story.
-	"Lists" fill the oer end of that need - they show all items of a specific type that have been introduced to the story so far.
+	"Lists" fill the other end of that need - they show all items of a specific category that have been introduced to the story so far.
 	Both of these are identified by URL's that are relative to that or the source content
 
 * "documents"
@@ -47,13 +47,11 @@ In order to accomplish what's described above, we need to define and explain a n
 * "command keywords"
 	Part of the goal of this project was to allow all of the content associated with it to be represented by flat text files, but still be able to produce something dynamic. Plain HTML is a huge part of that, but it's doesn't fill all of our requirements, thus the need for keywords that can assist in telling the content how to function and how to be displayed. See the "Command Keyords" section later in this document for more details.
 
-Note: The words "page" and "type" are also used elsewhere in this project on occasion to reference other things. I hould probably change the terminology to "post" and "category"  in these instances, but that would be a complicated provess. Maybe some day.
-
 #===================#
 #== General Rules ==#
 #===================#
 
-* All styles, items, types, etc. MUST have internal names without spaces, tabs, slashes, questionmarks, or ampersands. Parsing is occasionally done by all of these characters, so using them in that manner may result in unexpected behaviors.
+* All styles, items, categories, etc. MUST have internal names without spaces, tabs, slashes, questionmarks, or ampersands. Parsing is occasionally done by all of these characters, so using them in that manner may result in unexpected behaviors.
 
 #=====================#
 #== Getting Started ==#
@@ -96,8 +94,8 @@ The following directives are defined within the includes/config.php file:
 * REFERER_MAIN - The full URL of the main page of the source site. So with the above example, probably "example.com/"
 * PROTOCOL - What is the protocol that the referrer uses? Either "http" or "https"
 * BASE_URI - The base URI for THIS site (not the source site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; if you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"
-* TABLE_PREFIX - You usually won't need to chane this from "cp_", but really, this can be what ever you want.
-* PAGE_DIR - The directory that you want indvidual pages to be referenced at. So, if you want the character page for pagge 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".
+* TABLE_PREFIX - You usually won't need to change this from "cp_", but really, this can be what ever you want.
+* PAGE_DIR - The directory that you want indvidual pages to be referenced at. So, if you want the character page for page 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".
 * LIST_DIR - Same as "PAGE_DIR" above, except for list views.
 
 #=====================#
@@ -106,7 +104,7 @@ The following directives are defined within the includes/config.php file:
 
 * "full" - This is the style that full character pages are built from. 
 * "section" - This style focuses on individual sections of content in which items will be listed. So for example, a full page might have sections for "characters" and locations"; section styles will define what frames each of the individual items in those sections.
-* "single" - This style is for pages displayed within the iframe showing only a single item. Think of them as a cross between full and section.
+* "single" - This style is for webpages displayed within the iframe showing only a single item. Think of them as a cross between full and section.
 * "block" - This style is for blocks of content that are not expected to contain other items. For example, they might be used for a header or footer. These are called with the "block" command keyword. Note that there are a number of command keywords that can be used within block styles, but depending on where they're placed, they may not necessarily have the desired effect.
 * "item" - Technically this is not a style. Items contain information about a specific item (relevant to a specific page) as well as text regarding that item.
 * "document" - Also technically not a style. Documents have their own unique URI on the site. The site will fail to behave as intended if there is not at least one document (the main page of the site) defined with URI "/".
@@ -159,7 +157,7 @@ Special data for "full" styles:
 * >>> single [STYLE NAME] - declare the single item style that should be used for the iframe
 
 Special data for "documents":
-* >>> style [FULL STYLE NAME] [PAGE NUMBER] - When defining documents, if this is used, the style named will be output. Everything after this point within the document definition will be output with the "content" command keyword.
+* >>> style [FULL STYLE NAME] [PAGE ID NUMBER] - When defining documents, if this is used, the style named will be output. Everything after this point within the document definition will be output with the "content" command keyword.
 
 Plain HTML and other information:
 * Anything that needs to be parsed as plain html doesn't need to be preceeded with anything
@@ -180,7 +178,7 @@ Content is handled by a different parser than items and styles (though the heade
 * >>> style [FULL STYLE NAME] - Declares the "full" style for this content.
 * >>> sections [LIST OF SPACE SEPARATED SECTION ID's] - (only within "page" and "block" types) The list of the sections in the order that they will go in.
 * >>> section [SECTION ID] - (only within "page" and "block" types) An identifier for the section. Note that this won't be displayed and as such can be arbitrary, so long as none are repeated. This must be declared before any of the command keywords below.
-* >>> type [TYPE] - (only within "page" and "block" types) The items listed in this section will correlate to a type per the cp_types table
+* >>> category [CATEGORY] - (only within "page" and "block" types) The items listed in this section will correlate to a category per the cp_categories table
 * >>> s_name [STRING] - A display name for the section, referenced with the "SECTION_NAME" variable
 * >>> s_style [SECTION STYLE NAME] - The name of the section style that will be used for the section
 * >>> items [LIST OF SPACE SEPARATED ITEMS] - (only within "page" and "block" types) The list of the items that will appear in this section, in the order that they will go in.
@@ -191,33 +189,35 @@ Content is handled by a different parser than items and styles (though the heade
 #== Declaration Keywords ==#
 #==========================#
 
-The script can import text content into the database. For this process, what kind of internal object (style, name, content, item, or type) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string ">>>>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line.
+The script can import text content into the database. For this process, what kind of internal object (style, name, content, item, or category) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string ">>>>>" with some amount of whitespace on either end. Other than the whitespace and the arguments descrived below nothing can come before or after them on the same line.
 
 Creation:
-* >>>>> declare name [URI] [PAGE]
-* >>>>> declare content [PAGE] [TYPE ("page", "list", or "block")] [NAME (see details below)] (after this, a new line followed by the desired content
-* >>>>> declare style [NAME] [PAGE] [TYPE ("full", "section", "single", or "block")] (after this, a new line followed by the desired content)
-* >>>>> declare item [NAME] [PAGE] (after this, a new line followed by the desired content)
-* >>>>> declare type [NAME] [TYPE] [START PAGE (see details below)] [END PAGE (see details below)]
+* >>>>> declare name [URI] [ID]
+* >>>>> declare content [ID] [TYPE ("page", "list", or "block")] [NAME (see details below)] (after this, a new line followed by the desired content
+* >>>>> declare style [NAME] [ID] [TYPE ("full", "section", "single", or "block")] (after this, a new line followed by the desired content)
+* >>>>> declare item [NAME] [ID] (after this, a new line followed by the desired content)
+* >>>>> declare category [NAME] [CATEGORY] [START ID (see details below)] [END ID (see details below)]
 * >>>>> declare document [URI] (after this, a new line followed by the desired content)
 
 Deletion:
 * >>>>> delete name [URI]
-* >>>>> delete content [PAGE] [TYPE ("page", "list", or "block")] [NAME (see details below)]
-* >>>>> delete style [NAME] [PAGE]
-* >>>>> delete item [NAME] [PAGE]
-* >>>>> delete type [NAME] [TYPE]
+* >>>>> delete content [ID] [TYPE ("page", "list", or "block")] [NAME (see details below)]
+* >>>>> delete style [NAME] [ID]
+* >>>>> delete item [NAME] [ID]
+* >>>>> delete category [NAME] [CATEGORY] [START ID (see details below)]
 * >>>>> delete document [URI]
 
 Notes:
-* The "name" field for content, styles, items, and types AND the "type" field for content, styles, and types CANNOT contain whitespace, as the parsing process separates these details out by whitespace.
+* The "name" field for content, styles, items, and categories AND the "type" field for content, styles, and categories CANNOT contain whitespace, as the parsing process separates these details out by whitespace.
 * For "content":
 	* For type "page", the "name" field should not be used either in creation or deletion.
 	* For type "list", the "name" field has to match the item category that's being displayed
 	* For type "block", the "name" field can be what ever you want
-* For "type"
-	* For the "start page" and "end page" fields, if instead of a number, you use "_", the first or last number available ("0" or "999999.99") will be used.
-	* There's no reason why you can't specify one item as being multiple different types. For example, you might choose to make a talking sword both type "item" and type "character".
+* For "category"
+	* For the "start ID" and "end ID" fields, if instead of a number, you use "_", the first or last number available ("0" or "999999.99") will be used.
+	* If the "start ID" and "end ID" fields will be "0" and "999999.99" respectively, neither are required to be present; Regardless of the start field, if the end field will be "999999.99" it does not have to be present.
+	* For deleting, if no start ID is provided, "0" is assumed.
+	* There's no reason why you can't specify one item as being in multiple different categories. For example, you might choose to put a talking sword in both "item" and "character" categories.
 
 #========================#
 #== Internal Variables ==#
@@ -241,13 +241,13 @@ Variables that the end user can set for later use:
 * CONSTANT [NUMBER] - a constant set by the user using the "constant" command keyword. Once a constant is set, further attempts to change it will fail silently.
 
 Variables that produce a URL for the source material:
-* SOURCE_URL - the URL of the source page that this page is referencing
+* SOURCE_URL - the URL of the source webpage that this page or list is referencing
 * SOURCE_URI [URI] - creates a URL in the format of: PROTOCOL . "://" . REFERER_BASE . [THE URI PROVIDED]
-* MAIN_EXT_URL - The URL of the main page of the source
+* MAIN_EXT_URL - The URL of the main webpage of the source
 
 Variables that produce a URL for internal material:
-* MAIN_URL - the URL for the main page of this site (not the source site)
-* LIST_URL [TYPE (optional)]- the URL for the list of the specified type. If no type is provided, a link to the type of the current section is produced.
+* MAIN_URL - the URL for the main webpage of this site (not the source site)
+* LIST_URL [CATEGORY (optional)]- the URL for the list of the specified category. If no category is provided, a link to the category of the current section is produced.
 * PAGE_URL - the URL for the page view (so, if you're looking at a list view or single view, the link to go back to the list of all things from that page).
 * NEXT_PAGE - (Not available for single styles) the URL of the next internal page
 * PREV_PAGE - (Not available for single styles) the URL of the previous internal page
@@ -261,11 +261,11 @@ Files that are included within the project:
 * index.php - Calls the other files for the script
 * initialize.php - creates the necessary mysql tables (assuming that there is already a mysql user and database, and that the config file is filled out)
 * import.php - A page that allows the user to import content into the database
-* export.php - Outputs the text for all of the items, types, names, contents, and styles within the database.
+* export.php - Outputs the text for all of the items, categories, names, contents, and styles within the database.
+* edit.php - rudimentary interface for editing existing objects
 * includes/config.php - Includes the configuration to connect to the database as well as specifics about the site in question
 * includes/parse.php - Includes the functions necessaey to parse the contents, items, and styles
 * includes/url.php - Parses the url and other data to determine what content needs to be loaded
-* includes/full.php - Loads a full page relative to a post from the source page
 * includes/connect.php - connects to mysql
 * includes/single.php - Loads a siingle page view
 * includes/js_top_full.txt - text that will be used to begin the full page view pages
@@ -273,10 +273,12 @@ Files that are included within the project:
 * includes/js_single.txt - Scripts for the single item view pages
 * includes/parse2.php - Includes the functions necessaary to parse database content
 * includes/document.php - The processes necessary for loading a document.
-* includes/uri_convert.php - The process that takes the referrer URI and converts it into a page number
-* includes/final_full.php - Finishes out the process of displaying pages and lists.
+* includes/exp_functions.php - additional functions for exporting data
+* includes/page-list.php - Finishes out the process of displaying pages and lists.
+* includes/edit_help.php - helper script for edit.php
 * texts/documentation.txt - The documentation for this project
 * texts/ideas.txt - Ideas for the project that have not yet been implimented.
+* texts/example_content.txt - Example content to give users examples of how to make their own content.
 
 #==========================#
 #== Database Information ==#
@@ -284,39 +286,41 @@ Files that are included within the project:
 
 Table1 (cp_names): four columns - compares the URI to a post number
         a URI
-        a page number (not necessarily incrimenting)
-	the number of the page immediately after this one
-	the number of the page immediately before this one
+        an ID number (not necessarily incrimenting)
+	the ID of the page immediately after this one
+	the ID of the page immediately before this one
 Table2 (cp_contents): four columns - a list of content that we'll be working from for each page
         a number that corralates to table1
         text describing categories and content items for those categories
 	a type ("page", "list", or "block")
-	a name ("page" and "list" types are automatically named "cp_page_con" and "cp_list_con", respectively)
+	a name ("page" types are automatically named "cp_page_con")
 Table3 (cp_items): five columns - the details for an item
         the name of a content item
-        the page number
+        the ID number
         text describing that item.
-	The next page that that item is updated on
-	The previous page that that item is updated on
+	The next ID that that item is updated on
+	The previous ID that that item is updated on
 Table4 (cp_styles): four columns - styles and layouts
         the type of style it is ("full", "section", "single", "block")
         the name of the style
-        the page number
+        the ID number
         text describing that style
-Table5 (cp_types): two columns - what type of item each item is
+Table5 (cp_categories): four columns - what category of item each item is part of
         an item name
-        the type of item it is (e.g. "character", "setting")
+        the category of item it is (e.g. "character", "setting")
+	the first page ID on which that item belongs to that category
+	the last page ID on which that item belongs to that category
 Table6 (cp_documents): two columns - single webpages, such as a main page or a "contacts" page
 	The URI that the page should be located at (relative to the base uri)
 	Text describing what will be shown there.
 
 The commands to create these databases look like this:
 
-CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, Page DECIMAL(8,2), Next DECIMAL(8,2), Previous DECIMAL(8,2) );
-CREATE TABLE IF NOT EXISTS cp_contents ( Page DECIMAL(8,2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, Page, Type ) );
-CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), Page DECIMAL(8,2), Description LONGTEXT, Next DECIMAL(8,2), Previous DECIMAL(8,2), PRIMARY KEY ( Name, Page ) );
-CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), Page DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) );
-CREATE TABLE IF NOT EXISTS cp_types ( Name VARCHAR(100), Type VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Type ) );
+CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, ID DECIMAL(8,2), Next DECIMAL(8,2), Previous DECIMAL(8,2) );
+CREATE TABLE IF NOT EXISTS cp_contents ( ID DECIMAL(8,2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, ID, Type ) );
+CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, Next DECIMAL(8,2), Previous DECIMAL(8,2), PRIMARY KEY ( Name, ID ) );
+CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, ID ) );
+CREATE TABLE IF NOT EXISTS cp_categories ( Name VARCHAR(100), Category VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Category, Start ) );
 CREATE TABLE IF NOT EXISTS cp_documents ( URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT );
 
 #===============================#
@@ -360,7 +364,7 @@ and the "src" attribute will be populated by javascript as needed.
 >>> style style1_full
 >>> sections characters settings items
 >>> section characters
->>> type character
+>>> category character
 >>> s_name Characters
 >>> s_style style1_section
 >>> items steve sean
@@ -377,13 +381,13 @@ Footer text
 
 >>>>> declare content 5 block setting_item
 >>> section settings
->>> type setting
+>>> category setting
 >>> s_name Settings
 >>> s_style style1_section
 >>> items steve_house
 >>> block head_foot
 >>> section items
->>> type item
+>>> category item
 >>> s_name Items
 >>> s_style style1_section
 >>> items washing_machine
@@ -394,7 +398,7 @@ Footer text
 >>> style style1_full
 >>> sections characters settings items
 >>> section characters
->>> type character
+>>> category character
 >>> s_name Characters
 >>> s_style style1_section
 >>> items steve sean
@@ -405,7 +409,7 @@ Header text
 Footer text
 >>> footer end
 >>> section settings
->>> type setting
+>>> category setting
 >>> s_name Settings
 >>> s_style style1_section
 >>> items steve_house
@@ -416,7 +420,7 @@ Header text
 Footer text
 >>> footer end
 >>> section items
->>> type item
+>>> category item
 >>> s_name Items
 >>> s_style style1_section
 >>> items washing_machine
@@ -440,7 +444,7 @@ From there, the parser will transform it into an object that the script can trav
 	],
 	"sections":{
 		"characters":{
-			"type":"character",
+			"category":"character",
 			"name":"Characters",
 			"style":[
 				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
@@ -457,14 +461,14 @@ From there, the parser will transform it into an object that the script can trav
 			],
 			"items":{
 				"steve":{
-					"page":2,
+					"ID":2,
 					"previous":null,
 					"description":[
 						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
 					]
 				},
 				"sean":{
-					"page":2,
+					"ID":2,
 					"previous":null,
 					"description":[
 						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
@@ -473,7 +477,7 @@ From there, the parser will transform it into an object that the script can trav
 			}
 		},
 		"settings":{
-			"type":"setting",
+			"category":"setting",
 			"name":"Settings",
 			"style":[
 				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
@@ -489,7 +493,7 @@ From there, the parser will transform it into an object that the script can trav
 			],
 			"items":{
 				"steve_house":{
-					"page":2,
+					"ID":2,
 					"previous":null,
 					"description":[
 						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
@@ -498,7 +502,7 @@ From there, the parser will transform it into an object that the script can trav
 			}
 		},
 		"items":{
-			"type":"item",
+			"category":"item",
 			"name":"Items",
 			"style":[
 				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
@@ -514,7 +518,7 @@ From there, the parser will transform it into an object that the script can trav
 			],
 			"items":{
 				"washing_machine":{
-					"page":2,
+					"ID":2,
 					"previous":null,
 					"description":[
 						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"

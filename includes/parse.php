@@ -7,10 +7,11 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 	static $a_content_list_expanded = array(); // an array to put the expanded list of content lines in
 	static $a_blocks = array(); // If a block is calle dmore thna once, this way we won't have to query for it more than once
 	static $v_error = "<!--\n"; // a place to put error content
-	global $v_page;
-	global $o_mysql_connection;
-	global $v_item_type;
-	global $v_show_parse_level;
+	global $v_ID; // the ID of the current page
+	global $o_mysql_connection; // the mysql connection
+	global $v_item_category; // the category of the items that we're viewing
+	global $v_show_parse_level; // whether or not we're outputtin gthe parse information.
+	global $v_table_prefix;
 	foreach ( $a_content_list as &$v_line ) {
 		if ( preg_match( '/^\s*>>>\s+(items|block|s_style)\s+(.*)$/', $v_line, $a_match ) ) {
 			$a_arguments = preg_split( "/\s+/", $a_match[2] );
@@ -30,19 +31,14 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 					$a_list = $a_blocks[$a_arguments[0]];
 				} else {
 					$v_query = "
-						SELECT Content from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
-						WHERE Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+						SELECT Content from " . $v_table_prefix . "contents
+						WHERE ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
 						AND Type = 'block'
 						AND Name = '" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'
-						ORDER BY Page DESC
+						ORDER BY ID DESC
 						LIMIT 1
 					";
-					$o_results = $o_mysql_connection->query( $v_query );
-					if ( $o_results->num_rows == 0 ) {
-						// #####
-						echo "No such block content. I have to figure out something better to do for this...";
-						exit;
-					}
+					$o_results = fn_query_check( "contents->ID: " . $v_ID . ", block, " . $a_arguments[0], $v_query, true );
 					$a_row = $o_results->fetch_assoc();
 					$v_content = $a_row['Content'];
 					$a_list = preg_split( "/(\r)?\n/", $v_content );
@@ -70,39 +66,34 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 
 		// query for all of the items
 		$v_query = "
-			SELECT a.Name, a.Page, a.Description, a.Previous FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items a
+			SELECT a.Name, a.ID, a.Description, a.Previous FROM " . $v_table_prefix . "items a
 			INNER JOIN (
-				SELECT Name, MAX( Page ) Page
-				FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
-				WHERE Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+				SELECT Name, MAX( ID ) ID
+				FROM " . $v_table_prefix . "items
+				WHERE ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
 				GROUP BY Name
-			) b ON a.Name = b.Name AND a.Page = b.Page
+			) b ON a.Name = b.Name AND a.ID = b.ID
 			WHERE a.Name IN ( " . $v_in_string . " )
 			ORDER BY Name ASC
 		";
-		$o_results = $o_mysql_connection->query( $v_query );
+		$o_results = fn_query_check( "items: (" . $v_in_string . "), " . $v_ID, $v_query, false );
 	} elseif ( $v_type == "list" ) {
 		// query for item content
 		$v_query = "
-			SELECT a.Name, a.Page, a.Description, a.Previous FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items a
-			INNER JOIN " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types ON a.Name = " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.Name
+			SELECT a.Name, a.ID, a.Description, a.Previous FROM " . $v_table_prefix . "items a
+			INNER JOIN " . $v_table_prefix . "categories ON a.Name = " . $v_table_prefix . "categories.Name
 			INNER JOIN (
-				SELECT Name, MAX( Page ) Page
-				FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
-				WHERE Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+				SELECT Name, MAX( ID ) ID
+				FROM " . $v_table_prefix . "items
+				WHERE ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
 				GROUP BY Name
-			) b ON a.Name = b.Name AND a.Page = b.Page
-			WHERE " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.Type = '" . $o_mysql_connection->real_escape_string($v_item_type) . "'
-			AND " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.Start <= '" . $o_mysql_connection->real_escape_string($v_page) . "'
-			AND " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types.End >= '" . $o_mysql_connection->real_escape_string($v_page) . "'
+			) b ON a.Name = b.Name AND a.ID = b.ID
+			WHERE " . $v_table_prefix . "categories.Category = '" . $o_mysql_connection->real_escape_string($v_item_category) . "'
+			AND " . $v_table_prefix . "categories.Start <= '" . $o_mysql_connection->real_escape_string($v_ID) . "'
+			AND " . $v_table_prefix . "categories.End >= '" . $o_mysql_connection->real_escape_string($v_ID) . "'
 			ORDER BY Name ASC
 		";
-		$o_results = $o_mysql_connection->query( $v_query );
-		if ( $o_results->num_rows == 0 ) {
-			// #####
-			echo "No such item type. I have to figure out something better to do for this...";
-			exit;
-		}
+		$o_results = fn_query_check( "items->category: " . $v_item_category . ", " . $v_ID, $v_query, false );
 	}
 
 	// Put them all into an object
@@ -111,7 +102,7 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$o_items[$a_row['Name']] = array();
 		$o_items[$a_row['Name']]['name'] = $a_row['Name'];
-		$o_items[$a_row['Name']]['page'] = $a_row['Page'];
+		$o_items[$a_row['Name']]['ID'] = $a_row['ID'];
 		$o_items[$a_row['Name']]['previous'] = $a_row['Previous'];
 		$o_items[$a_row['Name']]['description'] = preg_split( "/(\r)?\n/", $a_row['Description'] );
 		if ( $v_type == "list" ) {
@@ -121,8 +112,8 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 	if ( $v_type == "page" ) {
 		foreach ( $a_items as $v_item ) {
 			if ( ! isset( $o_items[$v_item] ) ) {
-				echo "No such item \"" . $v_item . "\" for this page.";
-				exit;
+				echo "No such item \"" . $v_item . "\" for this ID.";
+				fn_close();
 			}
 		}
 	}
@@ -136,38 +127,38 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 
 	// query for all of the styles
 	$v_query = "
-		SELECT a.Name, a.Page, a.Description FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles a
+		SELECT a.Name, a.ID, a.Description FROM " . $v_table_prefix . "styles a
 		INNER JOIN (
-			SELECT Name, MAX( Page ) Page
-			FROM " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
-			WHERE Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
+			SELECT Name, MAX( ID ) ID
+			FROM " . $v_table_prefix . "styles
+			WHERE ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
 			GROUP BY Name
-		) b ON a.Name = b.Name AND a.Page = b.Page
+		) b ON a.Name = b.Name AND a.ID = b.ID
 		WHERE a.Name IN ( " . $v_in_string . " )
 		ORDER BY Name ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+	$o_results = fn_query_check( "styles: (" . $v_in_string . "), " . $v_ID, $v_query, false );
 
 	// Put them all into an object
 	$o_section_styles = array(); // I need an object to keep all of the item data in
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$o_section_styles[$a_row['Name']] = array();
 		$o_section_styles[$a_row['Name']]['name'] = $a_row['Name'];
-		$o_section_styles[$a_row['Name']]['page'] = $a_row['Page'];
+		$o_section_styles[$a_row['Name']]['ID'] = $a_row['ID'];
 		$o_section_styles[$a_row['Name']]['description'] = preg_split( "/(\r)?\n/", $a_row['Description'] );
 	}
 	foreach ( $a_section_styles as $v_section_style ) {
 		if ( ! isset( $o_section_styles[$v_section_style] ) ) {
-			echo "No such item \"" . $v_section_style . "\" for this page.";
-			exit;
+			echo "No such item \"" . $v_section_style . "\" for this ID.";
+			fn_close();
 		}
 	}
 
 	if ( $v_type == "list" ) {
 		$a_temp_array = array(
-			">>> sections " . $v_item_type,
-			">>> section " . $v_item_type,
-			">>> type " . $v_item_type,
+			">>> sections " . $v_item_category,
+			">>> section " . $v_item_category,
+			">>> category " . $v_item_category,
 			">>> items " . $v_items
 		);
 		$a_content_list_expanded = array_merge( $a_temp_array, $a_content_list_expanded );
@@ -200,8 +191,8 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "section" ) {
 				$v_cur_section = $a_match[4];
-			} elseif ( $a_match[1] == "type" ) {
-				$o_content['sections'][$v_cur_section]['type'] = $a_match[4];
+			} elseif ( $a_match[1] == "category" ) {
+				$o_content['sections'][$v_cur_section]['category'] = $a_match[4];
 			} elseif ( $a_match[1] == "s_name" ) {
 				$o_content['sections'][$v_cur_section]['name'] = $a_match[3];
 			} elseif ( $a_match[1] == "s_style" ) {
@@ -211,7 +202,7 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 				foreach ( $a_arguments as $v_item ) {
 					if ( $v_item != "" ) {
 						$o_content['sections'][$v_cur_section]['order'][] =  $v_item;
-						$o_content['sections'][$v_cur_section]['items'][$v_item]['page'] = $o_items[$v_item]['page'];
+						$o_content['sections'][$v_cur_section]['items'][$v_item]['ID'] = $o_items[$v_item]['ID'];
 						$o_content['sections'][$v_cur_section]['items'][$v_item]['previous'] = $o_items[$v_item]['previous'];
 						$o_content['sections'][$v_cur_section]['items'][$v_item]['description'] = $o_items[$v_item]['description'];
 					}
@@ -230,6 +221,19 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 		}
 	}
 
+	// check the content object to make sure that the number of sections and items line up
+	if ( count( $o_content['order'] ) != count( $o_content['sections'] ) ) {
+		echo "Number of sections declared does not match number of sections present.";
+		fn_close();
+	}
+	foreach ( $o_content['sections'] as $_section )	{
+		if ( count( $_section['order'] ) != count( $_section['items'] ) ) {
+			echo "Number of itmes declared does not match number of items present in section " . $_section['name'];
+			fn_close();
+		}
+	}
+	
+
 	$v_error .= "-->\n";
 	return array( $o_content, $v_error );
 }
@@ -242,7 +246,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $v_iframe = ''; //text for the part of the html surrounding the iframe
 	static $v_description = ''; //text for item descriptions
 
-	static $v_main_type = ''; //When this function is first called, what is the value of $v_type
+	static $v_primary_type = ''; //When this function is first called, what is the value of $v_type
 	static $v_section_id = ''; // the internal name of the section that we're working with currently.
 	static $v_current_item = ''; // the name of the current item that we are working with
 	static $v_disp_name = ''; // the display name set within the item object
@@ -254,8 +258,8 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $a_constant = array(); // an array where the end user can set a value ONCE and it will never change
 	static $a_document_list = array(); // the content for a document. This needs to be handled differently, thus it has its own variable.
 	static $a_style_blocks = array(); // an array of style blocks that have already been queried for so that they will not have to be queried for
-	static $v_previous_page = ''; // what is the number of the previous page for this item
-	static $v_next_page = ''; // what is the number of the next page for this item (only in single view)
+	static $v_previous_ID = ''; // what is the number of the previous ID for this item
+	static $v_next_ID = ''; // what is the number of the next ID for this item (only in single view)
 	static $v_single_style = ''; // When parsing a full page view, what is the requested single style?
 	static $b_head = false; // whether or not we're currently writing to the head
 	static $b_description = false; // whether or not we're currently writing to an item description
@@ -265,31 +269,32 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	static $c_sections = -1; // a count of which section we're currently on
 	static $c_items = 0; // a count of which item we're currently on within that section
 
-	global $o_mysql_connection;
+	global $o_mysql_connection; // the object that contains the mysql connection
 	global $o_content; // the object that all content and item data is stored in
-	global $v_page; // The page number that's being requested
+	global $v_ID; // The ID number that's being requested
 	global $v_source_url; //the url for the source page
 	global $v_source_uri; // the uri portion for the source page
 	global $v_main_page;
 	global $v_relative_path;
-	global $v_current; // for single item views, the page number that is considered "current" (not necessarily the page number being requested)
+	global $v_current; // for single item views, the ID number that is considered "current" (not necessarily the ID number being requested)
 	global $v_item; // for single item views, what is the name of the item
 	global $v_style;
 	global $v_show_parse_level;
-	global $v_next_int_page;
-	global $v_prev_int_page;
+	global $v_next_int_uri;
+	global $v_prev_int_uri;
+	global $v_table_prefix;
 
-	if ( $v_main_type == "" ) {
-		$v_main_type = $v_type;
+	if ( $v_primary_type == "" ) {
+		$v_primary_type = $v_type;
 	}
 
 	if ( ! $v_max_section_num && $v_type == "full" ) {
 		$v_max_section_num = ( count( $o_content['order'] ) - 1 );
-		$v_current = $v_page;
+		$v_current = $v_ID;
 	} elseif ( $v_type == "single" && ! $v_description ) {
 		$v_single_style = $v_style;
 		$v_current_item = $v_item;
-		list( $b_is_prev, $v_previous_page, $b_is_next, $v_next_page, $a_item_text ) = fn_request_item( $v_current_item, $v_page, $v_current );
+		list( $b_is_prev, $v_previous_ID, $b_is_next, $v_next_ID, $a_item_text ) = fn_request_item( $v_current_item, $v_ID, $v_current );
 		$v_description = '';
 		$v_disp_name = '';
 		$v_disp_image = '';
@@ -352,9 +357,9 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} elseif ( $a_match[4] == "ITEM_NUM" ) {
 					$out .= $c_items;
 				} elseif ( $a_match[4] == "NEXT_PAGE" ) {
-					$out .= $v_next_int_page;
+					$out .= $v_next_int_uri;
 				} elseif ( $a_match[4] == "PREV_PAGE" ) {
-					$out .= $v_prev_int_page;
+					$out .= $v_prev_int_uri;
 				} elseif ( $a_match[4] == "CONSTANT" ) {
 					$variable = preg_replace( '/^\s*>>>\s+var\s+CONSTANT\s+([^\s]+).*$/', '$1', $a_match[0] );
 					$out .= $a_constant[$variable];
@@ -363,7 +368,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					if ( $variable != $a_match[0] ) {
 						$out .= BASE_URI . LIST_DIR . $variable . "/" . $v_source_uri;
 					} else {
-						$out .= BASE_URI . LIST_DIR . $o_content['sections'][$v_section_id]['type'] . "/" . $v_source_uri;
+						$out .= BASE_URI . LIST_DIR . $o_content['sections'][$v_section_id]['category'] . "/" . $v_source_uri;
 					}
 				} elseif ( $a_match[4] == "PAGE_URL" ) {
 					$out .= BASE_URI . PAGE_DIR . $v_source_uri;
@@ -377,7 +382,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 			} elseif ( $a_match[1] == "content" ) {
 				if ( $b_iframe ) {
 					$v_iframe .= addslashes( '<iframe id="cp_single" src=""></iframe>' );
-				} elseif ( $v_main_type == "document" ) {
+				} elseif ( $v_primary_type == "document" ) {
 					fn_parse_descriptions( $a_document_list, 'document' );
 				} elseif ( $v_type == "full" ) {
 					$a_section_style_list = $o_content['sections'][$v_section_id]['style'];
@@ -392,26 +397,21 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$a_block_style_list = $a_style_blocks[$a_match[4]];
 				} else {
 					$v_query = "
-						SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
+						SELECT Description from " . $v_table_prefix . "styles
 						WHERE Type = 'block'
 						AND Name = '" . $o_mysql_connection->real_escape_string($a_match[4]) . "'
-						AND Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
-						ORDER BY Page DESC
+						AND ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
+						ORDER BY ID DESC
 						LIMIT 1
 					";
-					$o_results = $o_mysql_connection->query( $v_query );
-					if ( $o_results->num_rows == 0 ) {
-						// #####
-						echo "No such block style \"" . $a_match[4] . "\". I have to figure out something better to do for this...";
-						exit;
-					}
+					$o_results = fn_query_check( "styles->Name: " . $a_match[4] . ", block, " . $v_ID, $v_query, true );
 					$a_block_style = $o_results->fetch_assoc();
 					$v_block_style_text = $a_block_style['Description'];
 					$a_block_style_list = preg_split( "/(\r)?\n/", $v_block_style_text );
 					$a_style_blocks[$a_match[4]] = $a_block_style_list;
 				}
 				fn_parse_descriptions( $a_block_style_list, $v_type );
-			} elseif ( $a_match[1] == "ilink" && $v_main_type != "document" ) {
+			} elseif ( $a_match[1] == "ilink" && $v_primary_type != "document" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
 				} elseif ( $b_description ) {
@@ -422,10 +422,10 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out =& $v_body;
 				}
 				$link_text = preg_replace( '/^' . preg_quote( $a_match[4] ) . '\s+/', '', $a_match[3] );
-				if ( $v_main_type != "single" ) {
-					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_current . '&style=' . $v_single_style;
+				if ( $v_primary_type != "single" ) {
+					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&id=' . $v_current . '&style=' . $v_single_style;
 				} else {
-					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&page=' . $v_page . '&style=' . $v_single_style;
+					$link = $v_relative_path . 'single/' . $a_match[4] . '?current=' . $v_current . '&id=' . $v_ID . '&style=' . $v_single_style;
 				}
 				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $link_text . "</a>\n";
 			} elseif ( $a_match[1] == "no_new_line" ) {
@@ -441,7 +441,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				if ( substr( $out, -1 ) == "\n" ) {
 					$out = substr( $out, 0, -1 );
 				}
-			} elseif ( $a_match[1] == "plink" && $v_main_type != "document" ) {
+			} elseif ( $a_match[1] == "plink" && $v_primary_type != "document" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
 				} elseif ( $b_description ) {
@@ -451,13 +451,13 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} else {
 					$out =& $v_body;
 				}
-				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_previous_page . '&style=' . $v_single_style;
+				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&id=' . $v_previous_ID . '&style=' . $v_single_style;
 				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				unset( $out );
 			} elseif ( $a_match[1] == "repeat" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 				$c_repeats = 0;
-				if ( $v_main_type == "document" ) {
+				if ( $v_primary_type == "document" ) {
 					fn_parse_descriptions( $a_out[$c_repeats], $v_type );
 				} elseif ( $v_type == "full" ) {
 					foreach ( $o_content['order'] as $_section_name ) {
@@ -478,7 +478,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 						$b_is_prev = false;
 						if ( ! is_null( $o_content['sections'][$v_section_id]['items'][$v_current_item]['previous'] ) ) {
 							$b_is_prev = true;
-							$v_previous_page = $o_content['sections'][$v_section_id]['items'][$v_current_item]['previous'];
+							$v_previous_ID = $o_content['sections'][$v_section_id]['items'][$v_current_item]['previous'];
 						}
 						$a_item_text = $o_content['sections'][$v_section_id]['items'][$v_current_item]['description'];
 						$v_description = '';
@@ -508,7 +508,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				fn_parse_descriptions( $o_content['sections'][$v_section_id]['header'], 'section' );
 			} elseif ( $a_match[1] == "section_foot" ) {
 				fn_parse_descriptions( $o_content['sections'][$v_section_id]['footer'], 'section' );
-			} elseif ( $a_match[1] == "nlink" && $v_main_type != "document" ) {
+			} elseif ( $a_match[1] == "nlink" && $v_primary_type != "document" ) {
 				if ( $b_head ) {
 					$out =& $v_head;
 				} elseif ( $b_description ) {
@@ -518,7 +518,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				} else {
 					$out =& $v_body;
 				}
-				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_next_page . '&style=' . $v_single_style;
+				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&id=' . $v_next_ID . '&style=' . $v_single_style;
 				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				unset( $out );
 			} elseif ( $a_match[1] == "comment" && $a_match[4] == "start" ) {
@@ -526,7 +526,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 			} elseif ( $a_match[1] == "not_first" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
+				if ( $v_primary_type == "document" ) {
 				} elseif ( $v_type == "full" && $c_sections != 0 ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				} elseif ( $c_items != 0 ) {
@@ -534,7 +534,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "not_last" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
+				if ( $v_primary_type == "document" ) {
 				} elseif ( $v_type == "full" && $c_sections != $v_max_section_num ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				} elseif ( $c_items != $v_max_item_num ) {
@@ -542,7 +542,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "is_first" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
+				if ( $v_primary_type == "document" ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				} elseif ( $v_type == "full" && $c_sections == 0 ) {
 					fn_parse_descriptions( $a_out, $v_type );
@@ -551,7 +551,7 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "is_last" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
+				if ( $v_primary_type == "document" ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				} elseif ( $v_type == "full" && $c_sections == $v_max_section_num ) {
 					fn_parse_descriptions( $a_out, $v_type );
@@ -580,26 +580,26 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				}
 			} elseif ( $a_match[1] == "is_int_prev" && $a_match[4] == "start" && $v_type == "full" ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
-				} elseif ( $v_prev_int_page ) {
+				if ( $v_primary_type == "document" ) {
+				} elseif ( $v_prev_int_uri ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				}
 			} elseif ( $a_match[1] == "is_int_next" && $a_match[4] == "start" && $v_type == "full" ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
-				} elseif ( $v_next_int_page ) {
+				if ( $v_primary_type == "document" ) {
+				} elseif ( $v_next_int_uri ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				}
 			} elseif ( $a_match[1] == "no_int_prev" && $a_match[4] == "start" && $v_type == "full" ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
-				} elseif ( ! $v_prev_int_page ) {
+				if ( $v_primary_type == "document" ) {
+				} elseif ( ! $v_prev_int_uri ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				}
 			} elseif ( $a_match[1] == "no_int_next" && $a_match[4] == "start" && $v_type == "full" ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
-				if ( $v_main_type == "document" ) {
-				} elseif ( ! $v_next_int_page ) {
+				if ( $v_primary_type == "document" ) {
+				} elseif ( ! $v_next_int_uri ) {
 					fn_parse_descriptions( $a_out, $v_type );
 				}
 			} elseif ( $a_match[1] == "description" && $v_type == "item" ) {
@@ -633,27 +633,22 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 					$out =& $v_body;
 				}
 				$out = substr( $out, 0, -1 );
-				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&page=' . $v_next_page . '&style=' . $v_single_style;
+				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&id=' . $v_next_ID . '&style=' . $v_single_style;
 				$out .= $link;
 				unset( $out );
 			} elseif ( $a_match[1] == "style" && $v_type == "document" ) {
 				$a_arguments = preg_split( "/\s+/", $a_match[3] );
 				list( $a_document_list, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, "_____" );
-				$v_page = $a_arguments[1];
+				$v_ID = $a_arguments[1];
 				$v_query = "
-					SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
+					SELECT Description from " . $v_table_prefix . "styles
 					WHERE Type = 'full'
 					AND Name = '" . $o_mysql_connection->real_escape_string($a_arguments[0]) . "'
-					AND Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
-					ORDER BY Page DESC
+					AND ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
+					ORDER BY ID DESC
 					LIMIT 1
 				";
-				$o_results = $o_mysql_connection->query( $v_query );
-				if ( $o_results->num_rows == 0 ) {
-					// #####
-					echo "No such full page style. I have to figure out something better to do for this...";
-					exit;
-				}
+				$o_results = fn_query_check( "styles->Name: " . $a_arguments[0] . ", full, " . $v_ID, $v_query, true );
 				$a_full_style = $o_results->fetch_assoc();
 				$v_full_style_text = $a_full_style['Description'];
 				$a_full_style_list = preg_split( "/(\r)?\n/", $v_full_style_text );
@@ -678,37 +673,33 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 	return array( $v_body, $v_error, $v_head, $v_iframe );
 }
 
-function fn_request_item( $v_current_item, $v_page, $v_current ) {
+function fn_request_item( $v_current_item, $v_ID, $v_current ) {
 	global $o_mysql_connection;
+	global $v_table_prefix;
 	$v_query = "
-		SELECT Page, Description, Next, Previous from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
+		SELECT ID, Description, Next, Previous from " . $v_table_prefix . "items
 		WHERE Name = '" . $o_mysql_connection->real_escape_string($v_current_item) . "'
-		AND Page<='" . $o_mysql_connection->real_escape_string($v_page) . "'
-		ORDER BY Page DESC
+		AND ID<='" . $o_mysql_connection->real_escape_string($v_ID) . "'
+		ORDER BY ID DESC
 		LIMIT 1
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_results->num_rows == 0 ) {
-		// #####
-		echo "No such item. I have to figure out something better to do for this...";
-		exit;
-	}
+	$o_results = fn_query_check( "items->Name: " . $v_current_item . ", " . $v_ID, $v_query, true );
 	$a_item_data = $o_results->fetch_assoc();
 	$v_item_text = $a_item_data['Description'];
 	$b_is_next = false;
 	$b_is_prev = false;
-	$v_next_page = '';
-	$v_previous_page = '';
+	$v_next_ID = '';
+	$v_previous_ID = '';
 	if ( ! is_null( $a_item_data['Next'] ) && $a_item_data['Next'] <= $v_current ) {
 		$b_is_next = true;
-		$v_next_page = $a_item_data['Next'];
+		$v_next_ID = $a_item_data['Next'];
 	}
 	if ( ! is_null( $a_item_data['Previous'] ) ) {
 		$b_is_prev = true;
-		$v_previous_page = $a_item_data['Previous'];
+		$v_previous_ID = $a_item_data['Previous'];
 	}
 	$a_item_text = preg_split( "/(\r)?\n/", $v_item_text );
-	return array( $b_is_prev, $v_previous_page, $b_is_next, $v_next_page, $a_item_text );
+	return array( $b_is_prev, $v_previous_ID, $b_is_next, $v_next_ID, $a_item_text );
 }
 
 function fn_extract_lines( $a_lines, $c_lines, $v_type ) {

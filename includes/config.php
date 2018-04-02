@@ -17,7 +17,7 @@ define('BASE_URI','#######');
 define('TABLE_PREFIX', 'cp_');
 // The character pages for each page, should be referenced as if they're in their own directory:
 define('PAGE_DIR', 'pages/');
-// The list pages for each type should have thie rown directory as well
+// The list pages for each category should have thie rown directory as well
 define('LIST_DIR', 'lists/');
 
 if ( $_SERVER['HTTP_HOST'] == "example.com" ) {

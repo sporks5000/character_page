@@ -31,70 +31,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	require( $v_incdir . '/connect.php' );
 
 	$v_query = "
-		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names (
-			URI VARCHAR(100) PRIMARY KEY, Page DECIMAL(8,2), Next DECIMAL(8,2), Previous DECIMAL(8,2)
+		CREATE TABLE IF NOT EXISTS " . $v_table_prefix . "names (
+			URI VARCHAR(100) PRIMARY KEY, ID DECIMAL(8,2), Next DECIMAL(8,2), Previous DECIMAL(8,2)
 		)
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_mysql_connection->errno ) {
-		echo "Failed to create \"names\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
-		exit;
-	}
+	fn_query_check( "\"names\"", $v_query, false );
 	$v_query = "
-		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents (
-			Page DECIMAL(8,2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, Page, Type )
+		CREATE TABLE IF NOT EXISTS " . $v_table_prefix . "contents (
+			ID DECIMAL(8,2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, ID, Type )
 		)
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_mysql_connection->errno ) {
-		echo "Failed to create \"contents\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
-		exit;
-	}
+	fn_query_check( "\"contents\"", $v_query, false );
 	$v_query = "
-		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items (
-			Name VARCHAR(100), Page DECIMAL(8,2), Description LONGTEXT, Next DECIMAL(8,2), Previous DECIMAL(8,2), PRIMARY KEY ( Name, Page )
+		CREATE TABLE IF NOT EXISTS " . $v_table_prefix . "items (
+			Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, Next DECIMAL(8,2), Previous DECIMAL(8,2), PRIMARY KEY ( Name, ID )
 		)
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_mysql_connection->errno ) {
-		echo "Failed to create \"items\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
-		exit;
-	}
+	fn_query_check( "\"items\"", $v_query, false );
 	$v_query = "
-		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles ( 
-			Type TINYTEXT, Name VARCHAR(100), Page DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, Page ) 
+		CREATE TABLE IF NOT EXISTS " . $v_table_prefix . "styles ( 
+			Type TINYTEXT, Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, ID ) 
 		)
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_mysql_connection->errno ) {
-		echo "Failed to create \"items\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
-		exit;
-	}
+	fn_query_check( "\"styles\"", $v_query, false );
 	$v_query = "
-		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types (
-			Name VARCHAR(100), Type VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Type )
+		CREATE TABLE IF NOT EXISTS " . $v_table_prefix . "categories (
+			Name VARCHAR(100), Category VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Category, Start )
 		)
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_mysql_connection->errno ) {
-		echo "Failed to create \"types\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
-		exit;
-	}
+	fn_query_check( "\"categories\"", $v_query, false );
 	$v_query = "
-		CREATE TABLE IF NOT EXISTS " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents (
+		CREATE TABLE IF NOT EXISTS " . $v_table_prefix . "documents (
 			URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT
 		)
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
-	if ( $o_mysql_connection->errno ) {
-		echo "Failed to create \"documents\" table: (" . $o_mysql_connection->errno . ") " . $o_mysql_connection->error;
-		exit;
-	}
+	fn_query_check( "\"documents\"", $v_query, false );
 
 	echo "Tables have been created.\n";
 	// create a file to indicate that the databases have been initialized
 	touch( $v_incdir . "/" . TABLE_PREFIX . 'initialized' );
-	exit;
+	fn_close();
 }
 ?>
 

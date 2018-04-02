@@ -1,16 +1,17 @@
 <?php
 
 $v_document_uri = preg_replace( '/^' . preg_quote( BASE_URI, "/" ) . '/', '/', $_SERVER['REQUEST_URI'] );
+$v_source_url = PROTOCOL . '://' . REFERER_MAIN;
 
 $v_query = "
-	SELECT Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents
+	SELECT Description from " . $v_table_prefix . "documents
 	WHERE URI='" . $o_mysql_connection->real_escape_string($v_document_uri) . "'
 ";
-$o_results = $o_mysql_connection->query( $v_query );
+$o_results = fn_query_check( "documents->URI: " . $v_document_uri, $v_query, false );
+// If that URL doesn't exist, take us to the main page.
 if ( $o_results->num_rows == 0 ) {
-	// #####
-	echo "No such document. I have to figure out something better to do for this...";
-	exit;
+	header( "Location: " . $v_main_page );
+	fn_close();
 }
 $a_document = $o_results->fetch_assoc();
 $v_document_text = $a_document['Description'];
@@ -22,7 +23,7 @@ $out_error = "<!--\n";
 
 list( $v_body, $v_error, $v_head, $v_iframe ) = fn_parse_descriptions( $a_document_list, 'document' );
 
-##### Do I REALLY need to add the javascript here?
+// I probably don't REALLY need to add the javascript here, but... <shrugs>
 $js_top = file_get_contents( $v_incdir . '/js_top_full.txt' );
 while ( substr($js_top, -1) != '"' ) {
 	$js_top = substr( $js_top, 0, -1 );
@@ -35,4 +36,4 @@ $out_head .= $v_head . "</head>\n";
 
 echo $out_head . $out_error . $out_body;
 
-exit;
+fn_close();

@@ -59,5 +59,9 @@ if ( $v_db_alt_user ) {
 </html>
 
 <?php
-exit;
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+	fn_close();
+} else {
+	exit;
+}
 ?>

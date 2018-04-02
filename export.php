@@ -12,23 +12,7 @@ $v_out = '';
 $v_rootdir = dirname( __FILE__ );
 $v_incdir = $v_rootdir . '/includes';
 
-function fn_minimize_page ( $v_page ) {
-	if ( preg_match( '/\.00$/', $v_page ) ) {
-		$v_page = substr( $v_page, 0, -3 );
-	} elseif ( preg_match( '/\..0$/', $v_page ) ) {
-		$v_page = substr( $v_page, 0, -1 );
-	}
-	return $v_page;
-}
-
-function fn_type_page ( $v_page, $v_pos ) {
-	if ( $v_pos = "start" && $v_page = 0 ) {
-		$v_page = "_";
-	} elseif ( $v_pos = "end" && $v_page = "999999.99" ) {
-		$v_page = "_";
-	}
-	return $v_page;
-}
+require( $v_incdir . '/exp_functions.php' );
 
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	// use the username and password from the POST data
@@ -39,65 +23,64 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	require( $v_incdir . '/connect.php' );
 
 	$v_query = "
-		SELECT URI, Page from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "names 
-		ORDER BY Page ASC
+		SELECT URI, ID from " . $v_table_prefix . "names 
+		ORDER BY ID ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+	$o_results = fn_query_check( "\"names\"", $v_query, false );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		
-		$v_out .= ">>>>> declare name " . $a_row['URI'] . " " . fn_minimize_page($a_row['Page']) . "\n";
+		$v_out .= ">>>>> declare name " . $a_row['URI'] . " " . fn_minimize_ID($a_row['ID']) . "\n";
 	}
 	$v_out .= "\n\n\n";
 
 	$v_query = "
-		SELECT Name, Type, Start, End from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "types
-		ORDER BY Type ASC
+		SELECT Name, Category, Start, End from " . $v_table_prefix . "categories
+		ORDER BY Category ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+	$o_results = fn_query_check( "\"categories\"", $v_query, false );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare type " . $a_row['Name'] . " " . $a_row['Type'] . " " . fn_type_page($a_row['Start'], 'start') . " " . fn_type_page($a_row['End'], 'end') . "\n";
+		$v_out .= ">>>>> declare category " . $a_row['Name'] . " " . $a_row['Category'] . " " . fn_category_id($a_row['Start'], $a_row['End']) . "\n";
 	}
 	$v_out .= "\n\n\n";
 
 	$v_query = "
-		SELECT Page, Content, Type, Name from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "contents
-		ORDER BY Page ASC
+		SELECT ID, Content, Type, Name from " . $v_table_prefix . "contents
+		ORDER BY ID ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+	$o_results = fn_query_check( "\"contents\"", $v_query, false );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		if ( $a_row['Type'] == "block" ) {
-			$v_out .= ">>>>> declare content " . fn_minimize_page($a_row['Page']) . " block " . $a_row['Name'] . "\n" . $a_row['Content'] . "\n\n";
+		if ( $a_row['Type'] == "block" || $a_row['Type'] == "list" ) {
+			$v_out .= ">>>>> declare content " . fn_minimize_ID($a_row['ID']) . " " . $a_row['Type'] . " " . $a_row['Name'] . "\n" . $a_row['Content'] . "\n\n";
 		} else {
-			$v_out .= ">>>>> declare content " . fn_minimize_page($a_row['Page']) . " " . $a_row['Type'] . "\n" . $a_row['Content'] . "\n\n";
+			$v_out .= ">>>>> declare content " . fn_minimize_ID($a_row['ID']) . " " . $a_row['Type'] . "\n" . $a_row['Content'] . "\n\n";
 		}
 	}
 	$v_out .= "\n\n\n";
 
 	$v_query = "
-		SELECT Name, Page, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "items
-		ORDER BY Page ASC
+		SELECT Name, ID, Description from " . $v_table_prefix . "items
+		ORDER BY ID ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+		$o_results = fn_query_check( "\"items\"", $v_query, false );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare item " . $a_row['Name'] . " " . fn_minimize_page($a_row['Page']) . "\n" . $a_row['Description'] . "\n\n";
+		$v_out .= ">>>>> declare item " . $a_row['Name'] . " " . fn_minimize_ID($a_row['ID']) . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
 	$v_query = "
-		SELECT Type, Name, Page, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "styles
-		ORDER BY Page ASC
+		SELECT Type, Name, ID, Description from " . $v_table_prefix . "styles
+		ORDER BY ID ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+		$o_results = fn_query_check( "\"styles\"", $v_query, false );
 	while ( $a_row = $o_results->fetch_assoc() ) {
-		$v_out .= ">>>>> declare style " . $a_row['Name'] . " " . fn_minimize_page($a_row['Page']) . " " . $a_row['Type'] . "\n" . $a_row['Description'] . "\n\n";
+		$v_out .= ">>>>> declare style " . $a_row['Name'] . " " . fn_minimize_ID($a_row['ID']) . " " . $a_row['Type'] . "\n" . $a_row['Description'] . "\n\n";
 	}
 	$v_out .= "\n\n\n";
 
 	$v_query = "
-		SELECT URI, Description from " . $o_mysql_connection->real_escape_string(TABLE_PREFIX) . "documents
+		SELECT URI, Description from " . $v_table_prefix . "documents
 		ORDER BY URI ASC
 	";
-	$o_results = $o_mysql_connection->query( $v_query );
+		$o_results = fn_query_check( "\"documents\"", $v_query, false );
 	while ( $a_row = $o_results->fetch_assoc() ) {
 		$v_out .= ">>>>> declare document " . $a_row['URI'] . "\n" . $a_row['Description'] . "\n\n";
 	}
@@ -107,7 +90,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	}
 
 	echo 'Site Data:<br><textarea name="text" cols="60" rows="20">' . $v_out . '</textarea><br />' . "\n";
-	exit;
+	fn_close();
 }
 
 ?>
@@ -131,5 +114,9 @@ if ( $v_db_alt_user ) {
 </html>
 
 <?php
-exit;
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+	fn_close();
+} else {
+	exit;
+}
 ?>

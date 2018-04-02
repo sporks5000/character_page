@@ -7,26 +7,25 @@ if ( isset( $_SERVER['HTTPS'] ) ) {
 }
 $v_main_page = $v_prot . '://' . $_SERVER['HTTP_HOST'] . BASE_URI;
 
-// Determine the page URI
-$b_do_single = false;
-$b_do_document = false;
-$b_do_list = false;
+// Determine the source URI
+$v_type = '';
 $v_source_uri = '';
 if ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . 'single\//', $_SERVER['REQUEST_URI'] ) ) {
-	$b_do_single = true;
+	$v_type = "single";
 } elseif ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( LIST_DIR, '/' ) . '.+/', $_SERVER['REQUEST_URI'] ) ) {
-	$b_do_list = true;
+	$v_type = "list";
 } elseif ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( PAGE_DIR, '/' ) . '.+/', $_SERVER['REQUEST_URI'] ) ) {
 	// if the URI is constructed to match the URI of the source site
 	$v_source_uri = preg_replace( '/' . preg_quote( BASE_URI, '/' ) . preg_quote( PAGE_DIR, '/' ) . '/', '', $_SERVER['REQUEST_URI'] );
 	$v_source_uri = preg_replace( '/(\?|&)show_parse=[12]/', '', $v_source_uri );
+	$v_type = "page";
 } elseif ( preg_match( '/https?:\/\/' . preg_quote( REFERER_BASE, '/' ) . '/', $_SERVER['HTTP_REFERER'] ) && preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( PAGE_DIR, '/' ) . '/', $_SERVER['REQUEST_URI'] ) ) {
-	// If the referrer is the source, and the posts directory is target, and grab the URI of the referrer
+	// If the referrer is the source, and the pages directory is target, and grab the URI of the referrer
 	$v_source_uri = preg_replace( '/https?:\/\/' . preg_quote( REFERER_BASE, '/' ) . '/', '', $_SERVER['HTTP_REFERER'] );
 	header("Location: " . $v_main_page . PAGE_DIR . $v_source_uri );
 	exit();
 } else {
-	$b_do_document = true;
+	$v_type = "document";
 }
 
 // allows you to see what the parser is parsing
@@ -40,18 +39,11 @@ if ( $_GET['show_parse'] == 1 ) {
 require( $v_incdir . '/parse.php' );
 require( $v_incdir . '/connect.php' );
 
-if ( $b_do_single ) {
-	$v_relative_path = str_repeat( "../", ( count( explode( '/', LIST_DIR ) ) - 1 ) ); ##### This needs to be revised
+if ( $v_type == "single" ) {
 	require( $v_incdir . '/single.php' );
-} elseif ( $b_do_document ) {
-	$v_relative_path = str_repeat( "../", ( count( explode( '/', $_SERVER['REQUEST_URI'] ) ) - count( explode( '/', BASE_URI ) ) ) ); ##### Is this right?
-	$v_source_url = PROTOCOL . '://' . REFERER_MAIN;
+} elseif ( $v_type == "document" ) {
+	// Don't need to define $v_relative_path here
 	require( $v_incdir . '/document.php' );
-} elseif ( $b_do_list ) {
-	$v_relative_path = str_repeat( "../", ( count( explode( '/', LIST_DIR ) ) ) );
-	require( $v_incdir . '/list.php' );
-} else {
-	$v_relative_path = str_repeat( "../", ( count( explode( '/', PAGE_DIR ) ) - 1 ) );
-	$v_source_url = PROTOCOL . '://' . REFERER_BASE . $v_source_uri;
-	require( $v_incdir . '/full.php' );
+} elseif ( $v_type == "page" || $v_type == "list" ) {
+	require( $v_incdir . '/page-list.php' );
 }

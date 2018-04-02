@@ -1,7 +1,3 @@
-1)  Go through all the #####
-2)  A 404 page
-3)  declare and delete "ucontent" "uitem" and "ucontent" - takes uri instead of page number and then queries to replace uri with page before importing into the database
-	1)  check box within export.php for whether to output in pages or URIs.
-4)  example material
-5)  Better error checking for importing and deleting
-6)  Change all database references of "page" to "ID" instead; Change all references to the "type" database to "category" instead.
+1)  example material
+2)  Better testing for the edit process
+3)  If edit.php had an "add" button, I could probably relegate import.php entirely to a background process, or merge it into edit.php.
