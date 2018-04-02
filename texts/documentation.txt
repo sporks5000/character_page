@@ -260,9 +260,8 @@ Files that are included within the project:
 
 * index.php - Calls the other files for the script
 * initialize.php - creates the necessary mysql tables (assuming that there is already a mysql user and database, and that the config file is filled out)
-* import.php - A page that allows the user to import content into the database
-* export.php - Outputs the text for all of the items, categories, names, contents, and styles within the database.
-* edit.php - rudimentary interface for editing existing objects
+* edit.php - a rough interface for editing or deleting existing objects
+* includes/import.php - A page that facilitates importing and deleting content to and from the database
 * includes/config.php - Includes the configuration to connect to the database as well as specifics about the site in question
 * includes/parse.php - Includes the functions necessaey to parse the contents, items, and styles
 * includes/url.php - Parses the url and other data to determine what content needs to be loaded

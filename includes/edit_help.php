@@ -93,8 +93,15 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 			$v_out .= ">>>>> declare document " . $a_row['URI'] . "\n" . $a_row['Description'];
 			$v_out .= '</textarea><br /><input type="hidden" value=">>>>> delete document ' . $a_row['URI'] . '">';
 		}
+	} elseif ( $_POST['type'] == "new" ) {
+		$v_out .= ">>>>> declare ";
+		$v_out .= '</textarea><br /><input type="hidden" value="">';
 	}
-	$v_out .= '<input type="submit" value="Delete" onclick="fn_delete(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" value="Submit" onclick="fn_submit(this)"></div>';
+	if ( $_POST['type'] == "new" ) {
+	} else {
+		$v_out .= '<input type="submit" value="Delete" onclick="fn_delete(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+	}
+	$v_out .= '<input type="submit" value="Cancel" onclick="fn_cancel(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" value="Submit" onclick="fn_submit(this)"></div>';
 	echo $v_out;
 	fn_close();
 }
