@@ -52,6 +52,13 @@ In order to accomplish what's described above, we need to define and explain a n
 #===================#
 
 * All styles, items, categories, etc. MUST have internal names without spaces, tabs, slashes, questionmarks, or ampersands. Parsing is occasionally done by all of these characters, so using them in that manner may result in unexpected behaviors.
+* All URIs styles, items, categories, etc. MUST have internal names that are less than 100 characters long.
+
+#=========================#
+#== System Requirements ==#
+#=========================#
+
+This project expects a fairly standard Apache, Mysql, and PHP setup. It has been tested with CentOS Linux version 6.9, Apache 2.4, MariaDB 10.0, and PHP 7, however it's likely that it will be able to run with other variants of these pieces of software. Linux is likely not required, and other than the .htaccess file, Apache can likely be replaced by most any other webserver software. The functions to connect to Mysql are hard-coded within the PHP code (using the mysqli php module), so Mysql (or a drop-in replacement such as MariaDB or Percona) is required.
 
 #=====================#
 #== Getting Started ==#
@@ -62,8 +69,8 @@ Note: This project does not include any process for uploading files to the serve
 1) Upload all of the files for this project to the server. Ensure that they have the correct permissions, etc.
 2) Create a database and two database users for this project. See the "Mysql Users" section below for details regarding the two users.
 3) Edit the includes/config.php file on the server to include the mysql username and password as well as other relevant bits.
-4) Navigate to the initialize.php file and enter the username and password for the admin user. This will create the necessary tables within the database.
-5) Navigate to the import.php file and enter the username and password for the admin user. Add content (see the details below on how keywords should be used).
+4) Navigate to the site and enter the username and password for the admin user. This will create the necessary tables within the database.
+5) Navigate to the edit.php file and enter the username and password for the admin user. Add content (see the details below on how keywords should be used).
 6) That's it - You're up and running!
 
 #=================#
@@ -84,19 +91,25 @@ The idea is that the config file will only have the username and password of the
 #== Config Directives ==#
 #=======================#
 
-The following directives are defined within the includes/config.php file:
+There are a number of directives defined within the includes/config.php file.
 
+Directives relating to the database connection:
 * DB_NAME - The name of the mysql database that you're connecting to
 * DB_USER - The mysql user that you're connecting to the database with (Note, this should be the less privileged user)
 * DB_PASSWORD - The password of the mysql user from above
-* DB_HOST - This will almost always be "localhost". 
+* DB_HOST - This will almost always be "localhost".
+* TABLE_PREFIX - You usually won't need to change this from "cp_", but really, this can be what ever you want.
+
+Directives related to where the source content is stored:
 * REFERER_BASE - Assuming that the source is linking to this page, what's the base URL of the referrer for those requests? So for example, if a standard page from the sounce would have the URL "https://example.com/posts/2014-11-25/10", the REFERER_BASE should likely be "example.com/posts/"
 * REFERER_MAIN - The full URL of the main page of the source site. So with the above example, probably "example.com/"
 * PROTOCOL - What is the protocol that the referrer uses? Either "http" or "https"
+
+Directives related to how this site functions:
 * BASE_URI - The base URI for THIS site (not the source site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; if you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"
-* TABLE_PREFIX - You usually won't need to change this from "cp_", but really, this can be what ever you want.
 * PAGE_DIR - The directory that you want indvidual pages to be referenced at. So, if you want the character page for page 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".
 * LIST_DIR - Same as "PAGE_DIR" above, except for list views.
+* FORCE_HTTPS - if this is set to "true", an HTTPS connection is forced.
 
 #=====================#
 #== Types of Styles ==#
@@ -128,10 +141,11 @@ Regular command keywords:
 * >>> no_new_line - prevents the output from the previous line from ending in a new line character. Useful for some spacing weirdness
 * >>> set [NUMBER] [TEXT] - allows a usert to associate a number with a string and then later use the "SET" variable to recall that string.
 * >>> constant [NUMBER] [TEXT] - sets constant - only set the first time that it's referenced, other instances are ignored. This allows some flexibility for using "full" styles on documents. See the "CONSTANT" variable below.
+* >>> comment [TEXT] - a single line comment that will be ignored by the parser
 
 Indicate start or end positions
 * >>> repeat ["start" OR "end"] - (only in "section" and "full") Everything in between repeats for each section or item (if multiple starts are present before an end, they will be used in sequence and loop until all sections or items have been used) (cannot be used in "block" styles)
-* >>> comment ["start" OR "end"] - a comment that won't be interpreted by the parser.
+* >>> comment ["start" OR "end"] - Like above, except that multiple lines can be presented and ignored by the parser
 * >>> not_first ["start" OR "end"] - (only in "section", "full", and "block") Apply this to all items but the first
 * >>> not_last ["start" OR "end"] - (only in  "section", "full", and "block") Apply this to all items but the last
 * >>> is_first ["start" OR "end"] - (only in "section", "full", and "block") Apply this only to the first item
@@ -167,6 +181,7 @@ Plain HTML and other information:
 Note: Other than the following exceptions, the output from all lines beginning with ">>>" will be surrounded by new-line characters in the output html:
 * var
 * link
+* comment (won't actually create any output) 
 
 #==================================#
 #== Command Keywords for Content ==#
@@ -184,6 +199,9 @@ Content is handled by a different parser than items and styles (though the heade
 * >>> items [LIST OF SPACE SEPARATED ITEMS] - (only within "page" and "block" types) The list of the items that will appear in this section, in the order that they will go in.
 * >>> header ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "section_head" command keyword
 * >>> footer ["start" OR "end"] - Everything within these tags will be interpreted by the style parser rather thant he content parser. Called by the "section_foot" command keyword
+
+Notes:
+* The "sections" and "items" keywords are what define the order of those objects; the details about those sections and items can be conveyed in any order
 
 #==========================#
 #== Declaration Keywords ==#
@@ -218,6 +236,7 @@ Notes:
 	* If the "start ID" and "end ID" fields will be "0" and "999999.99" respectively, neither are required to be present; Regardless of the start field, if the end field will be "999999.99" it does not have to be present.
 	* For deleting, if no start ID is provided, "0" is assumed.
 	* There's no reason why you can't specify one item as being in multiple different categories. For example, you might choose to put a talking sword in both "item" and "character" categories.
+* Regarding Deletion - There's really no reason to use these, as the edit.php interface can handle deletion
 
 #========================#
 #== Internal Variables ==#
@@ -258,26 +277,27 @@ Variables that produce a URL for internal material:
 
 Files that are included within the project:
 
-* index.php - Calls the other files for the script
-* initialize.php - creates the necessary mysql tables (assuming that there is already a mysql user and database, and that the config file is filled out)
-* edit.php - a rough interface for editing or deleting existing objects
-* includes/import.php - A page that facilitates importing and deleting content to and from the database
-* includes/config.php - Includes the configuration to connect to the database as well as specifics about the site in question
+* index.php - Calls the other files within the project as needed based on the URI's that are requested
+* .htaccess - This file contains a number of directives for an Apache webserver that result in traffic for the sie to be redirected where it need to go (usually the index.php file)
+* edit.php - A rough interface for editing or deleting existing objects within the project
+* includes/initialize.php - Creates the necessary mysql tables (assuming that there is already a mysql user and database, and that the config file is filled out)
+* includes/import.php - A file that facilitates importing and deleting content to and from the database
+* includes/config.php - Includes the configuration to connect to the database as well as specifics about the site in question (this will need to be edited by the user)
 * includes/parse.php - Includes the functions necessaey to parse the contents, items, and styles
 * includes/url.php - Parses the url and other data to determine what content needs to be loaded
-* includes/connect.php - connects to mysql
-* includes/single.php - Loads a siingle page view
-* includes/js_top_full.txt - text that will be used to begin the full page view pages
-* includes/js_bottom_full.txt - additional text for the full page view pages containing the javascript that makes the links work
-* includes/js_single.txt - Scripts for the single item view pages
-* includes/parse2.php - Includes the functions necessaary to parse database content
-* includes/document.php - The processes necessary for loading a document.
-* includes/exp_functions.php - additional functions for exporting data
+* includes/connect.php - Connects to mysql and provides a few functions specific to mysql queries
+* includes/single.php - Processes and outputs the data for the single page view
+* includes/js_top_full.txt - Javascript and CSS that will be used within full page view objects (documents, pages, lists)
+* includes/js_bottom_full.txt - Additional text for the full page view objects containing the Javascript that makes the links work
+* includes/js_single.txt - Javascript and CSS for the single item view pages
+* includes/parse2.php - Includes the functions necessary to parse database content when importing, exporting, or editing.
+* includes/document.php - The processes necessary for loading a document
+* includes/edit_functions.php - Additional functions for exporting data
 * includes/page-list.php - Finishes out the process of displaying pages and lists.
 * includes/edit_help.php - helper script for edit.php
 * texts/documentation.txt - The documentation for this project
 * texts/ideas.txt - Ideas for the project that have not yet been implimented.
-* texts/example_content.txt - Example content to give users examples of how to make their own content.
+* texts/example_content.txt - Example content to give end users examples of how to make their own content.
 
 #==========================#
 #== Database Information ==#
@@ -321,6 +341,12 @@ CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), ID DECIMAL(8,2), Descri
 CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, ID ) );
 CREATE TABLE IF NOT EXISTS cp_categories ( Name VARCHAR(100), Category VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Category, Start ) );
 CREATE TABLE IF NOT EXISTS cp_documents ( URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT );
+
+#=====================#
+#== Error Reporting ==#
+#=====================#
+
+At any point where a data object is specified within a piece of content, but such an object does not exist, Not only will an error be output to the browser, but it will also be logged using the php error_log() function. So where ever all standard php errors are designated to go, they will end up here as well. These errors all begin with the string "Character Page at" followed by the requested URI and then a brief explanation of what was requested that did not exist.
 
 #===============================#
 #== Internally Generated HTML ==#

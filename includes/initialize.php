@@ -3,22 +3,6 @@
 $v_db_alt_user = "1";
 $v_db_alt_password = "1";
 
-$v_rootdir = dirname( __FILE__ );
-$v_incdir = $v_rootdir . '/includes';
-require( $v_incdir . '/config.php' );
-
-// If the databases have already been initialized, go back to the main page
-if ( file_exists( $v_incdir . "/" . TABLE_PREFIX . 'initialized' ) ) {
-	// determine the main page for the site (not the source)
-	$v_prot = 'http';
-	if ( isset( $_SERVER['HTTPS'] ) ) {
-		$v_prot .= 's';
-	}
-	$v_main_page = $v_prot . '://' . $_SERVER['HTTP_HOST'] . BASE_URI;
-	header("Location: " . $v_main_page );
-	exit;
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	// use the username and password from the POST data
 	if ( $_POST['user'] ) {
@@ -78,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 </head>
 <body>
-<form action="initialize.php" method="post">
+<form action="index.php" method="post">
 	Username: <input type="text" name="user"><br>
 	Password: <input type="password" name="pass"><br>
 	<input type="submit" value="Submit">

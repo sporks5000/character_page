@@ -1,9 +1,19 @@
 <?php
 
+// Have the databases been initialized
+if ( ! file_exists( $v_incdir . "/" . TABLE_PREFIX . 'initialized' ) ) {
+	require( $v_incdir . '/initialize.php' );
+	exit;
+}
+
 // determine the main page for the site (not the source)
 $v_prot = 'http';
 if ( isset( $_SERVER['HTTPS'] ) ) {
 	$v_prot .= 's';
+} elseif ( FORCE_HTTPS ) {
+	http_response_code(301);
+	header("Location: https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
+	exit();
 }
 $v_main_page = $v_prot . '://' . $_SERVER['HTTP_HOST'] . BASE_URI;
 

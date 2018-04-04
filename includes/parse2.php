@@ -1,5 +1,45 @@
 <?php
 
+function fn_is_number($v_value) {
+	if ( ! preg_match( '/^[0-9]{1,6}(\.[0-9]{1,2})?$/', $v_value ) ) {
+		return false;
+	}
+	return true;
+}
+function fn_is_name($v_value) {
+	if ( preg_match( '/(&|\?|\/)/', $v_value ) ) {
+		return false;
+	} elseif ( strlen($v_value) > 100 ) {
+		return false;
+	}
+	return true;
+}
+function fn_is_uri($v_value) {
+	if ( strlen($v_value) > 100 ) {
+		return false;
+	}
+	return true;
+}
+
+function fn_test_arguments( $v_object, $a_arguments ) {
+	if ( $v_object == "name" && fn_is_uri($a_arguments[0]) && fn_is_number($a_arguments[1]) ) {
+		return true;
+	} elseif ( $v_object == "content" && fn_is_number($a_arguments[0]) && fn_is_name($a_arguments[1]) ) {
+		if ( $a_arguments[1] == "page" || ( isset($a_arguments[2]) && fn_is_name($a_arguments[2]) ) ) {
+			return true;
+		}
+	} elseif ( $v_object == "style" && fn_is_number($a_arguments[1]) && fn_is_name($a_arguments[2]) && fn_is_name($a_arguments[0]) ) {
+		return true;
+	} elseif ( $v_object == "item" && fn_is_name($a_arguments[0]) && fn_is_number($a_arguments[1]) ) {
+		return true;
+	} elseif ( $v_object == "category" && fn_is_name($a_arguments[0]) && fn_is_name($a_arguments[1]) ) {
+		return true;
+	} elseif ( $v_object == "document" && fn_is_uri($a_arguments[0]) ) {
+		return true;
+	}
+	return false;
+}
+
 function fn_parse_import ( $a_import_text ) {
 	global $o_mysql_connection;
 	static $v_error = '';
@@ -17,7 +57,9 @@ function fn_parse_import ( $a_import_text ) {
 
 		if ( preg_match( '/^\s*>>>>>\s+declare\s+([^\s]+)\s+(.*)$/', $v_line, $a_match ) ) {
 			$a_arguments = preg_split( "/\s+/", $a_match[2] );
-			if ( $a_match[1] == 'name' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
+			if ( ! fn_test_arguments( $a_match[1], $a_arguments ) ) {
+				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . preg_replace( '/</', '&lt;', preg_replace( '/&lt;/', '&amp;lt;', $v_line ) ) . "</li>\n";
+			} elseif ( $a_match[1] == 'name' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
 				// begin a mysql transaction
 				$o_mysql_connection->begin_transaction();
 				// set the variables for the ID and URI
@@ -81,7 +123,8 @@ function fn_parse_import ( $a_import_text ) {
 				fn_query_check( $v_line, $v_query, false );
 				$o_mysql_connection->commit();
 				// report success
-				$v_success .= '<li>name: <a href="names/' . $a_arguments[0] . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . " " . $a_arguments[1] . "</a></li>\n";
+				$a_row = array( 'URI' => $a_arguments[0], 'ID' => $a_arguments[1] );
+				$v_success .= fn_make_links( $a_match[1], $a_row );
 			} elseif ( $a_match[1] == 'content' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) && ( isset( $a_arguments[2] ) || $a_arguments[1] == "page" ) ) {
 				$v_con_name = "cp_page_con";
 				if ( isset( $a_arguments[2] ) && $a_arguments[1] != "page" ) {
@@ -99,7 +142,8 @@ function fn_parse_import ( $a_import_text ) {
 					ON DUPLICATE KEY UPDATE Content='" . $o_mysql_connection->real_escape_string($v_out) . "'
 				";
 				fn_query_check( $v_line, $v_query, false );
-				$v_success .= '<li>name: <a href="contents/' . $a_arguments[0] . "&" . $a_arguments[1] . "&" . $v_con_name . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . " " . $a_arguments[1] . " " . $v_con_name . "</a></li>\n";
+				$a_row = array( 'ID' => $a_arguments[0], 'Type' => $a_arguments[1], 'Name' => $v_con_name );
+				$v_success .= fn_make_links( $a_match[1], $a_row );
 			} elseif ( $a_match[1] == 'style' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) && isset( $a_arguments[2] )  ) {
 				list( $v_out, $c_lines ) = fn_extract_lines2( $a_import_text, $c_lines );
 				$v_query = "
@@ -115,7 +159,8 @@ function fn_parse_import ( $a_import_text ) {
 						Description='" . $o_mysql_connection->real_escape_string($v_out) . "'
 				";
 				fn_query_check( $v_line, $v_query, false );
-				$v_success .= '<li>style: <a href="styles/' . $a_arguments[0] . "&" . $a_arguments[1] . "&" . $a_arguments[2] . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . " " . $a_arguments[1] . " " . $a_arguments[2] . "</a></li>\n";
+				$a_row = array( 'Name' => $a_arguments[0], 'ID' => $a_arguments[1], 'Type' => $a_arguments[2] );
+				$v_success .= fn_make_links( $a_match[1], $a_row );
 			} elseif ( $a_match[1] == 'item' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
 				list( $v_out, $c_lines ) = fn_extract_lines2( $a_import_text, $c_lines );
 				// begin a mysql transaction
@@ -185,7 +230,8 @@ function fn_parse_import ( $a_import_text ) {
 				fn_query_check( $v_line, $v_query, false );
 				$o_mysql_connection->commit();
 				// report success
-				$v_success .= '<li>item: <a href="items/' . $a_arguments[0] . "&" . $a_arguments[1] . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . " " . $a_arguments[1] . "</a></li>\n";
+				$a_row = array( 'Name' => $a_arguments[0], 'ID' => $a_arguments[1] );
+				$v_success .= fn_make_links( $a_match[1], $a_row );
 			} elseif ( $a_match[1] == 'category' && isset( $a_arguments[0] ) && isset( $a_arguments[1] ) ) {
 				$v_start = "0";
 				$v_end = "999999.99";
@@ -208,7 +254,8 @@ function fn_parse_import ( $a_import_text ) {
 						End = '" . $o_mysql_connection->real_escape_string($v_end) . "'
 				";
 				fn_query_check( $v_line, $v_query, false );
-				$v_success .= '<li>category: <a href="categories/' . $a_arguments[0] . "&" . $a_arguments[1] . "&" . $v_start . "&" . $v_end . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . " " . $a_arguments[1] . " " . $v_start . " " . $v_end . "</a></li>\n";
+				$a_row = array( 'Name' => $a_arguments[0], 'Category' => $a_arguments[1], 'Start' => $v_start, 'Start' => $v_end );
+				$v_success .= '<li>category: <a href="category/' . $a_arguments[0] . "&" . $a_arguments[1] . "&" . $v_start . "&" . $v_end . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . " " . $a_arguments[1] . " " . $v_start . " " . $v_end . "</a></li>\n";
 			} elseif ( $a_match[1] == 'document' && isset( $a_arguments[0] ) ) {
 				list( $v_out, $c_lines ) = fn_extract_lines2( $a_import_text, $c_lines );
 				$v_query = "
@@ -217,7 +264,8 @@ function fn_parse_import ( $a_import_text ) {
 					ON DUPLICATE KEY UPDATE Description='" . $o_mysql_connection->real_escape_string($v_out) . "'
 				";
 				fn_query_check( $v_line, $v_query, false );
-				$v_success .= '<li>document: <a href="documents/' . $a_arguments[0] . '" onclick="fn_edit_object(this);return false;">' . $a_arguments[0] . "</a></li>\n";
+				$a_row = array( 'URI' => $a_arguments[0] );
+				$v_success .= fn_make_links( $a_match[1], $a_row );
 			} else {
 				$v_error .= "<li>line " . ( $c_lines - 1 ) . ": " . preg_replace( '/</', '&lt;', preg_replace( '/&lt;/', '&amp;lt;', $v_line ) ) . "</li>\n";
 			}

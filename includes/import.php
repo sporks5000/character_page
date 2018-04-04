@@ -17,6 +17,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		require( $v_incdir . '/config.php' );
 		require( $v_incdir . '/connect.php' );
 		require( $v_incdir . '/parse2.php' );
+		require( $v_incdir . '/edit_functions.php' );
 
 		$a_import_text = preg_split( "/(\r)?\n/", $_POST['text'] );
 		// Parse the import text

@@ -5,6 +5,8 @@ define('DB_NAME', '#######');
 define('DB_USER', '#######');
 define('DB_PASSWORD', '#######');
 define('DB_HOST', 'localhost');
+// What table prefix will the database use for table names
+define('TABLE_PREFIX', 'cp_');
 // Assuming that the source is linking to this page, what's the base URL of the referrer for those requests?
 define('REFERER_BASE','#######');
 // What is the main URL of the source site?
@@ -13,12 +15,12 @@ define('REFERER_MAIN','#######');
 define('PROTOCOL','http');
 // What's the base URI for where this project is installed? This will usually be "/"
 define('BASE_URI','#######');
-// What table prefix will the database use for table names
-define('TABLE_PREFIX', 'cp_');
 // The character pages for each page, should be referenced as if they're in their own directory:
 define('PAGE_DIR', 'pages/');
 // The list pages for each category should have thie rown directory as well
 define('LIST_DIR', 'lists/');
+// Should a secure connection be forced?
+define('FORCE_HTTPS', false);
 
 if ( $_SERVER['HTTP_HOST'] == "example.com" ) {
 	// With this, we can have multiple domains pointed at the same docroot but showing different content

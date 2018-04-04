@@ -7,8 +7,6 @@ $v_out = '';
 $v_rootdir = dirname( __FILE__ );
 $v_incdir = $v_rootdir . '/includes';
 
-require( $v_incdir . '/exp_functions.php' );
-
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	// use the username and password from the POST data
 	$v_db_alt_user = $_POST['user'];
@@ -16,6 +14,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
 	require( $v_incdir . '/config.php' );
 	require( $v_incdir . '/connect.php' );
+	require( $v_incdir . '/edit_functions.php' );
 }
 
 ?>
@@ -35,41 +34,62 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 			echo '$(document).ready(function() {' . "\n" . '$("#type_select").val("' . $_POST['type'] . '")' . "\n" . '});' . "\n";
 		}
 	?>
-	function fn_edit_object(clicked) {
+	function fn_edit_object(clicked, action) {
 	// when a link is clicked, open it in the background and then remove the old content
 		var link = $(clicked);
-		var type = link.attr('href').split( "/" )[0];
-		var values = link.attr('href').split( "/" )[1];
+		var type = link.attr('href');
+		var values = link.attr('cp_data');
 		var username = $('#cp_user').val();
 		var password = $('#cp_pass').val();
+		var url;
 		var data = new FormData();
 		data.append("user", username);
 		data.append("pass", password);
-		data.append("type", type);
-		data.append("values", values);
+		if ( ! action ) {
+			data.append("type", type);
+			data.append("values", values);
+			url = "includes/edit_help.php"
+		} else if ( action == "delete" ) {
+			if ( ! window.confirm("Are you sure you want to DELETE this object?") ) {
+				return;
+			}
+			data.append("text", ">>>>> delete " + type + " " + values);
+			url = "includes/import.php"
+		}
 		// make the request to includes/edit_help.php
 		var xmlHttp = new XMLHttpRequest();
 		xmlHttp.onreadystatechange = function() {
-			if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
+			if (xmlHttp.readyState == 4 && (xmlHttp.status == 200 || xmlHttp.status == 500)){
 				var response = xmlHttp.responseText;
 				var responseDom = $(response);
 				var object = link.closest('.cp_object');
 				object.css('display','none');
 				object.parent().append(responseDom);
 				if ( type == "new" ) {
-					object.parent().after('<div><div class="cp_object"><li><a href="new/" onclick="fn_edit_object(this);return false;">CREATE NEW' + "</a></li></div></div>\n");
+					object.parent().after('<div><div class="cp_object"><li><a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' + "</a></li></div></div>\n");
 				}
 			}
 		};
-		xmlHttp.open("POST", "includes/edit_help.php", true);
+		xmlHttp.open("POST", url, true);
 		xmlHttp.send(data);
+	}
+	function fn_delete_object(clicked) {
+		fn_edit_object(clicked, "delete");
 	}
 	function fn_submit(clicked) {
-		if ( ! window.confirm("Are you sure you want to modify this object?") ) {
-			return;
-		}
 		var button = $(clicked);
-		var text = button.parent().children('textarea').val();
+		var action = button.val();
+		var text;
+		if ( action == "Cancel" ) {
+			button.parent().parent().children('.cp_object').css('display','block');
+			button.parent().remove();
+			return;
+		} else if ( action = "Submit" ) {
+			if ( ! window.confirm("Are you sure you want to modify this object?") ) {
+				return;
+			}
+			var text = button.parent().children('textarea').val();
+		}
 		var username = $('#cp_user').val();
 		var password = $('#cp_pass').val();
 		var data = new FormData();
@@ -78,7 +98,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		data.append("text", text);
 		var xmlHttp = new XMLHttpRequest();
 		xmlHttp.onreadystatechange = function() {
-			if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
+			if (xmlHttp.readyState == 4 && (xmlHttp.status == 200 || xmlHttp.status == 500)){
 				var response = xmlHttp.responseText;
 				var responseDom = $(response);
 				button.parent().after(responseDom);
@@ -87,35 +107,6 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		};
 		xmlHttp.open("POST", "includes/import.php", true);
 		xmlHttp.send(data);
-	}
-	function fn_delete(clicked) {
-		if ( ! window.confirm("Are you sure you want to DELETE this object?") ) {
-			return;
-		}
-		var button = $(clicked);
-		var text = button.parent().children('input[type="hidden"]').val();
-		var username = $('#cp_user').val();
-		var password = $('#cp_pass').val();
-		var data = new FormData();
-		data.append("user", username);
-		data.append("pass", password);
-		data.append("text", text);
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.onreadystatechange = function() {
-			if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-				var response = xmlHttp.responseText;
-				var responseDom = $(response);
-				button.parent().after(responseDom);
-				button.parent().remove();
-			}
-		};
-		xmlHttp.open("POST", "includes/import.php", true);
-		xmlHttp.send(data);
-	}
-	function fn_cancel(clicked) {
-		var button = $(clicked);
-		button.parent().parent().children('.cp_object').css('display','block');
-		button.parent().remove();
 	}
 </script>
 </head>
@@ -136,12 +127,12 @@ if ( $v_db_alt_user ) {
 	<br />
 	Object Type: <select name="type" id="type_select">
 		<option value="select">Select</option>
-		<option value="names">Names</option>
-		<option value="contents">Contents</option>
-		<option value="items">Items</option>
-		<option value="styles">Styles</option>
-		<option value="categories">Categories</option>
-		<option value="documents">Documents</option>
+		<option value="name">Names</option>
+		<option value="content">Contents</option>
+		<option value="item">Items</option>
+		<option value="style">Styles</option>
+		<option value="category">Categories</option>
+		<option value="document">Documents</option>
 		<option value="export">Export All</option>
 	</select>
 	<br />
@@ -149,10 +140,20 @@ if ( $v_db_alt_user ) {
 </form>
 
 <?php
+
+function fn_make_row( $v_type, $a_row ) {
+	return '<div><div class="cp_object">' . fn_make_links( $v_type, $a_row ) . "</div></div>\n";
+}
+
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	$v_type = $_POST['type'];
-	$v_out2 = '<div><div class="cp_object"><li><a href="new/" onclick="fn_edit_object(this);return false;">CREATE NEW' . "</a></li></div></div>\n";
-	if ( $v_type == "names" ) {
+	$v_out2 = '<div><div class="cp_object"><li><a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' . "</a></li></div></div>\n";
+
+#========================================================================#
+#== Pull the names and key details of all items in a specific category ==#
+#========================================================================#
+
+	if ( $v_type == "name" ) {
 		$v_out .= "<h2>Names:</h2><ul>\n" . $v_out2;
 		$v_query = "
 			SELECT URI, ID from " . $v_table_prefix . "names 
@@ -160,10 +161,10 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		";
 		$o_results = fn_query_check( "\"names\"", $v_query, false );
 		while ( $a_row = $o_results->fetch_assoc() ) {
-			$v_out .= '<div><div class="cp_object"><li>name: <a href="names/' . $a_row['URI'] . '" onclick="fn_edit_object(this);return false;">' . $a_row['URI'] . " " . fn_minimize_ID($a_row['ID']) . "</a></li></div></div>\n";
+			$v_out .= fn_make_row( $v_type, $a_row );
 		}
 		$v_out .= '</ul>';
-	} elseif ( $v_type == "contents" ) {
+	} elseif ( $v_type == "content" ) {
 		$v_out .= "<h2>Contents:</h2><ul>\n" . $v_out2;
 		$v_query = "
 			SELECT ID, Content, Type, Name from " . $v_table_prefix . "contents
@@ -171,13 +172,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		";
 		$o_results = fn_query_check( "\"contents\"", $v_query, false );
 		while ( $a_row = $o_results->fetch_assoc() ) {
-			if ( $a_row['Type'] == "block" || $a_row['Type'] == "list" ) {
-				$v_out .= '<div><div class="cp_object"><li>content: <a href="contents/' .  fn_minimize_ID($a_row['ID']) . '&' . $a_row['Type'] . '&' . $a_row['Name'] . '" onclick="fn_edit_object(this);return false;">' . fn_minimize_ID($a_row['ID']) . " " . $a_row['Type'] . " " . $a_row['Name'] . "</a></li></div></div>\n";
-			} else {
-				$v_out .= '<div><div class="cp_object"><li>content: <a href="contents/' .  fn_minimize_ID($a_row['ID']) . '&' . $a_row['Type'] . '&' . $a_row['Name'] . '" onclick="fn_edit_object(this);return false;">' . fn_minimize_ID($a_row['ID']) . " " . $a_row['Type'] . "</a></li></div></div>\n";
-			}
+			$v_out .= fn_make_row( $v_type, $a_row );
 		}
-	} elseif ( $v_type == "items" ) {
+	} elseif ( $v_type == "item" ) {
 		$v_out .= "<h2>Items:</h2><ul>\n" . $v_out2;
 		$v_query = "
 			SELECT Name, ID, Description from " . $v_table_prefix . "items
@@ -185,9 +182,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		";
 			$o_results = fn_query_check( "\"items\"", $v_query, false );
 		while ( $a_row = $o_results->fetch_assoc() ) {
-			$v_out .= '<div><div class="cp_object"><li>item: <a href="items/' . $a_row['Name'] . "&" . fn_minimize_ID($a_row['ID']) . '" onclick="fn_edit_object(this);return false;">' . $a_row['Name'] . " " . fn_minimize_ID($a_row['ID']) . "</a></li></div></div>\n";
+			$v_out .= fn_make_row( $v_type, $a_row );
 		}
-	} elseif ( $v_type == "styles" ) {
+	} elseif ( $v_type == "style" ) {
 		$v_out .= "<h2>Styles:</h2><ul>\n" . $v_out2;
 		$v_query = "
 			SELECT Type, Name, ID, Description from " . $v_table_prefix . "styles
@@ -195,9 +192,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		";
 		$o_results = fn_query_check( "\"styles\"", $v_query, false );
 		while ( $a_row = $o_results->fetch_assoc() ) {
-			$v_out .= '<div><div class="cp_object"><li>style: <a href="styles/' . $a_row['Name'] . "&" . fn_minimize_ID($a_row['ID']) . '" onclick="fn_edit_object(this);return false;">' . $a_row['Name'] . " " . fn_minimize_ID($a_row['ID']) . " " . $a_row['Type'] . "</a></li></div></div>\n";
+			$v_out .= fn_make_row( $v_type, $a_row );
 		}
-	} elseif ( $v_type == "categories" ) {
+	} elseif ( $v_type == "category" ) {
 		$v_out .= "<h2>Categories:</h2><ul>\n" . $v_out2;
 		$v_query = "
 			SELECT Name, Category, Start, End from " . $v_table_prefix . "categories
@@ -205,9 +202,9 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		";
 		$o_results = fn_query_check( "\"categories\"", $v_query, false );
 		while ( $a_row = $o_results->fetch_assoc() ) {
-			$v_out .= '<div><div class="cp_object"><li>category: <a href="categories/' . $a_row['Name'] . "&" . $a_row['Category'] . "&" . fn_minimize_ID($a_row['Start']) . '" onclick="fn_edit_object(this);return false;">' . $a_row['Name'] . " " . $a_row['Category'] . " " . fn_category_id($a_row['Start'], $a_row['End']) . "</a></li></div></div>\n";
+			$v_out .= fn_make_row( $v_type, $a_row );
 		}
-	} elseif ( $v_type == "documents" ) {
+	} elseif ( $v_type == "document" ) {
 		$v_out .= "<h2>Documents:</h2><ul>\n" . $v_out2;
 		$v_query = "
 			SELECT URI, Description from " . $v_table_prefix . "documents
@@ -215,8 +212,13 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		";
 		$o_results = fn_query_check( "\"documents\"", $v_query, false );
 		while ( $a_row = $o_results->fetch_assoc() ) {
-			$v_out .= '<div><div class="cp_object"><li>document: <a href="documents/' . $a_row['URI'] . '" onclick="fn_edit_object(this);return false;">' . $a_row['URI'] . "</a></li></div></div>\n";
+			$v_out .= fn_make_row( $v_type, $a_row );
 		}
+
+#===========================================#
+#== Just output everything to a text area ==#
+#===========================================#
+
 	} elseif ( $v_type == "export" ) {
 		$v_query = "
 			SELECT URI, ID from " . $v_table_prefix . "names 
@@ -288,6 +290,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		$v_out =  'Site Data:<br><textarea name="text" cols="60" rows="20">' . $v_out . '</textarea><br />' . "\n";
 	}
 
+	$v_out .= "<br /><br /><br /><br /><br />";
 	echo $v_out;
 }
 ?>

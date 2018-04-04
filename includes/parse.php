@@ -112,7 +112,11 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 	if ( $v_type == "page" ) {
 		foreach ( $a_items as $v_item ) {
 			if ( ! isset( $o_items[$v_item] ) ) {
+				if ( ! headers_sent() ) {
+					http_response_code(500);
+				}
 				echo "No such item \"" . $v_item . "\" for this ID.";
+				error_log("Character Page at " . $_SERVER['REQUEST_URI'] . " - No such item \"" . $v_item . "\" for this ID.", 0);
 				fn_close();
 			}
 		}
@@ -149,7 +153,11 @@ function fn_parse_content ( $a_content_list, $v_first, $v_type ) {
 	}
 	foreach ( $a_section_styles as $v_section_style ) {
 		if ( ! isset( $o_section_styles[$v_section_style] ) ) {
-			echo "No such item \"" . $v_section_style . "\" for this ID.";
+			if ( ! headers_sent() ) {
+				http_response_code(500);
+			}
+			echo "No such style \"" . $v_section_style . "\" for this ID.";
+			error_log("Character Page at " . $_SERVER['REQUEST_URI'] . " - No such style \"" . $v_section_style . "\" for this ID.", 0);
 			fn_close();
 		}
 	}
@@ -521,9 +529,11 @@ function fn_parse_descriptions( $a_content_list, $v_type ) {
 				$link = $v_relative_path . 'single/' . $v_current_item . '?current=' . $v_current . '&id=' . $v_next_ID . '&style=' . $v_single_style;
 				$out .= '<a class="cp_link" href="' . $link . '" onclick="fn_open_link(this);return false;">' . $a_match[3] . "</a>\n";
 				unset( $out );
-			} elseif ( $a_match[1] == "comment" && $a_match[4] == "start" ) {
-				// Just skip past these lines
-				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
+			} elseif ( $a_match[1] == "comment" ) {
+				if ( $a_match[4] == "start" ) {
+					// Just skip past these lines
+					list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
+				}
 			} elseif ( $a_match[1] == "not_first" && $a_match[4] == "start" && ( $v_type == "section" || $v_type == "full" ) ) {
 				list( $a_out, $c_lines ) = fn_extract_lines( $a_content_list, $c_lines, $a_match[1] );
 				if ( $v_primary_type == "document" ) {
