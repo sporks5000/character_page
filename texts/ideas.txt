@@ -1,2 +1,1 @@
-1)  README.md
-2)  Test the initialization process one last time
+1)  Test the initialization process one last time
