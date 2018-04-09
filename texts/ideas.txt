@@ -1,3 +1,2 @@
-1)  example material
-2)  Better testing for the edit process
-3)  After initializing, option to either import the example content, or go to the edit page
+1)  README.md
+2)  Test the initialization process one last time

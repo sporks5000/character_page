@@ -1,0 +1,1188 @@
+<html><head>
+<style>
+	h1 {font-size:1.4em;font-weight:bold;}
+	ul, ol {padding-left:30px;margin-top:2px;}
+	pre {border:1px solid grey;padding:5px;border-radius:3px;background-color:#d8d8d8;}
+	div.section {border-left:2px solid black;padding-left:20px;margin-top:30px;margin-bottom:30px;padding-top:5px;padding-bottom:5px;}
+	p.header {font-weight:bold;margin-bottom:2px;}
+	a {text-decoration-line:none;}
+	a:link {color:mediumblue;}
+	a:visited {color:mediumblue;}
+</style>
+</head></html>
+<body>
+
+<h1> Table of Contents</h1>
+<ul>
+	<li><a href="#character_page">Character Page</a></li>
+	<li><a href="#source_content">Source Content</a></li>
+	<li><a href="#system_requirements">System Requirements</a></li>
+	<li><a href="#general_rules">General Rules</a></li>
+	<li><a href="#getting_started">Getting Started</a></li>
+	<li><a href="#mysql_users">Mysql Users</a></li>
+	<li><a href="#config_directives">Config Directives</a></li>
+	<li><a href="#about_command_keywords">About Command Keywords</a>
+		<ul><li><a href="#declaration_keywords">Declaration Keywords</a></li>
+	</ul></a></li>
+	<li><a href="#iframe1">The Iframe</a></li>
+	<li><a href="#pages_and_lists">Pages and Lists</a></li>
+	<li><a href="#internal_objects">Internal Objects</a>
+		<ul><li><a href="#names">Names</a>
+			<ul><li><a href="#name_declaration">Declaration</a></li>
+			<li><a href="#name_examples">Examples</a></li>
+		</ul></a></li>
+		<li><a href="#items">Items</a>
+			<ul><li><a href="#item_declaration">Declaration</a></li>
+			<li><a href="#item_command_keywords">Command Keywords</a></li>
+			<li><a href="#item_examples">Examples</a></li>
+		</ul></a></li>
+		<li><a href="#categories">Categories</a>
+			<ul><li><a href="#category_declaration">Declaration</a></li>
+			<li><a href="#category_examples">Examples</a></li>
+		</ul></a></li>
+		<li><a href="#styles">Styles</a>
+			<ul><li><a href="#style_declaration">Declaration</a></li>
+			<li><a href="#style_command_keywords">Command Keywords</a></li>
+			<li><a href="#style_examples">Examples</a></li>
+		</ul></a></li>
+		<li><a href="#content">Content</a>
+			<ul><li><a href="#content_declaration">Declatarion</a></li>
+			<li><a href="#content_command_keywords">Command Keywords</a></li>
+			<li><a href="#content_examples">Examples</a></li>
+		</ul></a></li>
+		<li><a href="#documents">Documents</a>
+			<ul><li><a href="#document_declaration">Declatarion</a></li>
+			<li><a href="#document_command_keywords">Command Keywords</a></li>
+			<li><a href="#document_examples">Examples</a></li>
+		</ul></a></li>
+	</ul></a></li>
+	<li><a href="#internal_variables">Internal Variables</a></li>
+	<li><a href="#project_files">Project Files</a></li>
+	<li><a href="#internal_html">Internally Generated HTML</a>
+		<ul><li><a href="#links">Regarding Links</a></li>
+		<li><a href="#iframe2">Regarding the Iframe</a></li>
+	</ul></a></li>
+	<li><a href="#error_reporting">Error Reporting</a></li>
+	<li><a href="#other">Information that probably won't be userfull to the end user, but I'm including it anyway</a>
+		<ul><li><a href="#mysql2">Database Table Information</a></li>
+		<li><a href="#content_object">Further notes on Content and the Content php object</a></li>
+	</ul></a></li>
+</ul>
+
+
+
+<div id="character_page" class="section">
+<h1>Character Page</h1>
+
+<p>One of the most frustrating things about reading a webcomic or other serialized story is when a character or location or item reappears after not having been mentioned for months or years and suddenly the reader is left either digging through source material to figure out who or what is being discussed, or (more often) simply accepting that they will be confused with the story for a bit, but hoping that context clues further on will remind them of what's going on. Serialized web stories almost always have a "characters" page - this can fill in the gaps to some extent, but almost always it's designed to be as spoiler free as possible, which means that the information you're looking for is rarely ever there.</p>
+
+<p>"Sure the prince of the kingdom has a mysterious past, but the details of that mysterious past were discussed a few hundred pages back and why should I have to dig through history of the story to find the specific twenty pages that I need to re-read If those details cloud be summed up in an easily accessible paragraph or two?!"</p>
+
+<p>The goal of this project is to create a "characters" page that updates as the story moves forward. It's designed specifically to determine what page is "current" based on the referrer URI (what page linked to it) and not show any data from after that point. Readers can browse backward through when a certain character or item's description has changed and be linked to the page within the source content relevant to that change. To be clear - the goal isn't to absolutely prevent users from spoiling content for themselves (because they're users - if they really want to, they'll find a way) but rather to offer them details relevant and up-to-date relative to their current position in the story.</p>
+</div>
+
+<div id="source_content" class="section">
+<h1>Source Content</h1>
+
+<p>The "Character Page" project really wasn't designed to store a story, but instead content <i>relating to</i> a story. There are plenty of projects and platforms that are perfect for housing a series of pages or chapters, and it doesn't make sense to reinvent the wheel here. Because of this fact, this project relies on the notion that the story itself, the "source content" is being stored elsewhere - whether it's somewhere on the same server, or on a different platform entirely.</p>
+</div>
+<div id="system_requirements" class="section">
+<h1>System Requirements</h1>
+
+<p>This project expects a fairly standard Apache, Mysql, and PHP setup. It has been tested with CentOS Linux version 6.9, Apache 2.4, MariaDB 10.0, and PHP 7.0, however it's likely that it will be able to run with other variants of these pieces of software. Linux is likely not required, and other than the .htaccess file, Apache can likely be replaced by most any other webserver software. The functions to connect to Mysql are hard-coded within the PHP code (using the mysqli php module), so Mysql (or a drop-in replacement such as MariaDB or Percona) is required.</p>
+</div>
+<div id="general_rules" class="section">
+<h1>General Rules</h1>
+<ul>
+<li>All <a href="#styles">styles<a>, <a href="#items">items<a>, <a href="#categories">categories<a>, etc. MUST have internal names without spaces, tabs, slashes, question-marks, or ampersands. Parsing is occasionally done by all of these characters, so using them in that manner may result in unexpected behaviors.</li>
+<li>All URIs <a href="#styles">styles<a>, <a href="#items">items<a>, <a href="#categories">categories<a>, etc. MUST have internal names that are less than 100 characters long.</li>
+</ul>
+</div>
+<div id="getting_started" class="section">
+<h1>Getting Started</h1>
+
+<p><b>Note:</b> This project does not include any process for uploading files to the server, so if you don't have a way to accomplish that, maybe this project is not right for you.</p>
+
+<ol>
+<li>Upload all of the files for this project to the server. Ensure that they have the correct permissions, etc.</li>
+<li>Review the /includes/documentation.html file to familiarize yourself with key details regarding the <a href="#character_page">Character Page</a> project.</li>
+<li>Create a database and two database users for this project. See the "<a href="#mysql_users">Mysql Users</a>" section below for details regarding the two users.</li>
+<li>Edit the <a href="#config_directives">config directives</a> within the includes/config.php file on the server to include the mysql username and password as well as other relevant bits.</li>
+<li>Navigate to the site and enter the username and password for the admin user. This will create the necessary tables within the database</li>
+<li>Navigate to the edit.php file and enter the username and password for the admin user. Add content (see the details below on how <a href="#about_command_keywords">command keywords</a> should be used).</li>
+<li>That's it - You're up and running!</li>
+</ol>
+
+</div>
+<div id="mysql_users" class="section">
+<h1>Mysql Users</h1>
+
+<p>The script is designed to be used with two mysql users - one that only has SELECT privileges and one with all privileges in relation to the database created. The creation statements should look something like this:</p>
+
+<pre>CREATE USER 'cp_user'@'localhost' IDENTIFIED BY 'password1';
+GRANT SELECT ON cp_database.* TO 'cp_user'@'localhost';
+CREATE USER 'cp_user2'@'localhost' IDENTIFIED BY 'password2';
+GRANT ALL PRIVILEGES ON cp_database.* TO 'cp_user2'@'localhost';
+FLUSH PRIVILEGES;</pre>
+
+<p>The idea is that the <a href="#config_directives">config file</a> will only have the username and password of the less privileged user, while the credentials for the more privileged user will not be stored on the server. This significantly reduces the likelihood of a malicious user modifying database contents without the owner's knowledge or permission.</p>
+</div>
+<div id="config_directives" class="section">
+<h1>Config Directives</h1>
+
+<p>There are a number of directives defined within the includes/config.php file.</p>
+
+<p class="header">Directives relating to the database connection:</p>
+<ul>
+<li><b>DB_NAME</b> - The name of the mysql database that you're connecting to</li>
+<li><b>DB_USER</b> - The <a href="#mysql_users">mysql user</a> that you're connecting to the database with (Note, this should be the less privileged user)</li>
+<li><b>DB_PASSWORD</b> - The password of the mysql user from above</li>
+<li><b>DB_HOST</b> - This will almost always be "localhost".</li>
+<li><b>TABLE_PREFIX</b> - You usually won't need to change this from "cp_", but really, this can be what ever you want.</li>
+</ul>
+
+<p class="header">Directives related to where the <a href="#source_content">source content</a> is stored:</p>
+<ul>
+<li><b>REFERER_BASE</b> - Assuming that the source is linking to this page, what's the base URL of the referrer for those requests? So for example, if a standard page from the source would have the URL "https://example.com/posts/2014-11-25/10", the REFERER_BASE should likely be "example.com/posts/"</li>
+<li><b>REFERER_MAIN</b> - The full URL of the main page of the source site. So with the above example, probably "example.com/"</li>
+<li><b>PROTOCOL</b> - What is the protocol that the referrer uses? Either "http" or "https"</li>
+</ul>
+
+<p class="header">Directives related to how this site functions:</p>
+<ul>
+<li><b>BASE_URI</b> - The base URI for THIS site (not the <a href="#source_content">source<a/> site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; if you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"</li>
+<li><b>PAGE_DIR</b> - The directory that you want individual pages to be referenced at. So, if you want the character page for page 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".</li>
+<li><b>LIST_DIR</b> - Same as "PAGE_DIR" above, except for list views.</li>
+<li><b>FORCE_HTTPS</b> - if this is set to "true", an HTTPS connection is forced.</li>
+</ul>
+</div>
+<div id="about_command_keywords" class="section">
+<h1>About Command Keywords</h1>
+
+<p>Objects within the Character Page project (<a href="#styles">styles</a>, <a href="#names">names</a>, <a href="#content">content</a>, <a href="#items">items</a>, <a href="#categories">categories</a>, or <a href="#documents">documents</a>) are mostly created with HTML code. in order to get them to behave in the desired manner, this code is mixed in with "command keywords" that help determine what portions of the HTML should be output and in what way. All command keywords are prefaced by the string "&gt;&gt;&gt;" with some amount of whitespace on either end. Other than whitespace, the keywords themselves and any arguments described must be on their own separate line of text.</p>
+
+<p>You can read more about the command keywords that can be used for each object type in the entries below.</p>
+
+<div id="declaration_keywords" class="section">
+<h1>Declaration Keywords</h1>
+
+<p>Character Page can import text content into the database. For this process, what kind of internal object (<a href="#styles">style</a>, <a href="#names">name</a>, <a href="#content">content</a>, <a href="#items">item</a>, <a href="#categories">category</a>, or <a href="#documents">document</a>) as well as some other data will need to be specified. Declaration keywords are used to provide this information. All declaration keywords are prefaced by the string "&gt;&gt;&gt;&gt;&gt;" with some amount of whitespace on either end.</p>
+
+<p>You can read more about the declaration keywords for each object type in the entries below.</p>
+</div>
+</div>
+<div id="iframe1" class="section">
+<h1>The Iframe</h1>
+
+<p>One of the key concepts of the Character Page project is the idea of being able to look back through the history of an <a href="#items">item</a> to see how it has changed as the story has progressed. While the current details for an item will be displayed as part of the <a href="#pages_and_lists">page or list view</a> upon which it's present, previous versions will be loaded into an iframe and viewed there. You can read a little more about the iframe <a href="#iframe2">here</a>.</p>
+</div>
+<div id="pages_and_lists" class="section">
+<h1>Pages and Lists</h1>
+
+<p>Generally, there are two separate ways to think of the characters and items within a story: What items of all categories are present right now, and what items of a single category have we been introduced to so far.</p>
+
+<p>The idea for "pages" is that they would serve to fit the first of those to perspectives - they show all of the items that are present or relevant to the current bits of the story.</p>
+
+<p>"Lists" fill the other end of that need - they show all items of a specific category that have been introduced to the story so far.</p>
+
+<p>Both of these are identified by URLs that are relative to that or the source content</p>
+</div>
+<div id="internal_objects" class="section">
+<h1>Internal Objects</h1>
+
+<p>There are six types of objects within the Character Page project that the end user can create, edit, and deploy as needed: <a href="#styles">Styles</a>, <a href="#names">Names</a>, <a href="#content">Content</a>, <a href="#items">Items</a>, <a href="#categories">Categories</a>, or <a href="#documents">Documents</a>.</p>
+
+<div id="names" class="section">
+<h1>Names</h1>
+
+<p>Sometimes the web structure for a story is laid out in such a way that the URLs for every page are numbered and the numbers perfectly increment. It's really convenient when this is the case because it allows us to be able to reliably guess the URLs for the pages that come before and after the current page. When this isn't the case, however, we need to have a process in place for correlating the page URI for a specific piece of source content to an ID number. This is what names do.</p>
+
+<p>Complicating things: sometimes it becomes apparent with the <a href="#source_content">source material</a> that it's necessary for new content to be added in between existing content. Does this mean that you have to re-number EVERYTHING? Solution: ID numbers can contain up to two decimal places. So if you need to reference a new page that's suddenly between IDs 5 and 6, "5.1" is a perfectly acceptable number.</p>
+
+<div id="name_declaration" class="section">
+<h1>Declaration</h1>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare name [URI] [ID]</pre>
+
+<ul>
+<li><b>URI</b> - the URI of the source content being referenced.</li>
+<li><b>ID</b> - An ID number to associate with that URI. ID numbers can be anywhere from 0 to 999999.99 and can have up to two decimal places. ID numbers indicate the sequence the URIs are supposed to go in.</li>
+</ul>
+</div>
+<div id="name_examples" class="section">
+<h1>Examples</h1>
+
+<p>If you're lucky enough to have the URI be the page number, names are going to be fairly straight forward. If for example, the URL for the first page is "www.mystory.com/pages/1", the name for your first page will look like this:</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare name 1 1</pre>
+
+<p>However, if the source material that you're referencing has a more complicated naming scheme, you may end up with name objects that look more like this:</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare name 03-21-2017/content/The_beginning 1
+&gt;&gt;&gt;&gt;&gt; declare name 03-21-2017/content/A_visit_from_fred 2
+&gt;&gt;&gt;&gt;&gt; declare name 03-22-2017/content/They_discuss_a_book_collection 3</pre>
+</div>
+</div>
+
+<div id="items" class="section">
+<h1>Items</h1>
+
+<p>Items are anything from the story that you want to reference. Characters, settings, objects, art styles, reoccurring themes, author's notes, etc. The item object contains details about the item in question including a description, an image url, and various other variables.</p>
+
+<div id="item_declaration" class="section">
+<h1>Declaration</h1>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare item [NAME] [ID]</pre>
+
+<ul>
+<li><b>NAME</b> - A name that is used internally when referencing that item. Names cannot include spaces, tabs, slashes, question-marks, or ampersands.</li>
+<li><b>ID</b> - An ID number associated with a URI using a "<a href="#names">name</a>" object. ID numbers indicate the sequence the URIs are supposed to go in. When an item is queried, the highest ID number equal to or lesser than the ID of the current URI will be returned.</li>
+</ul>
+</div>
+<div id="item_command_keywords" class="section">
+<h1>Command Keywords</h1>
+
+<p>There are a few <a href="#about_command_keywords">command keywords</a> that are specific to item objects:</p>
+
+<ul>
+<li><b>&gt;&gt;&gt; disp_name</b> - The display name of the item</li>
+<li><b>&gt;&gt;&gt; disp_image</b> - The image URL for an item</li>
+<li><b>&gt;&gt;&gt; item_data</b> - a variable that can be used to store data about the item. Multiple of these can be used; the data from them will be stored in an array</li>
+<li><b>&gt;&gt;&gt; description ["start" OR "end"]</b> - indicates the description for an item.</li>
+</ul>
+
+<p>Within the item description, the following command keywords can be used:</p>
+
+<p class="header">Regular command keywords:</p>
+<ul>
+<li><b>&gt;&gt;&gt; var [VARIABLE NAME]</b> - a variable to be interpreted by the script (see list of <a href="#internal_variables">variables</a> below)</li>
+<li><b>&gt;&gt;&gt; link [ITEM NAME]</b> - an item name to convert into a URL</li>
+<li><b>&gt;&gt;&gt; ilink [ITEM NAME] [TEXT]</b> - this converts to a <a href="#link">link</a> for the item referenced that will be opened in <a href="#iframe1">the iframe</a></li>
+<li><b>&gt;&gt;&gt; section_head</b> - parses and outputs the content of the section header</li>
+<li><b>&gt;&gt;&gt; section_foot</b> - parses and outputs the content of the section footer</li>
+<li><b>&gt;&gt;&gt; no_new_line</b> - prevents the output from the previous line from ending in a new line character. Useful for some spacing weirdness</li>
+<li><b>&gt;&gt;&gt; set [NUMBER] [TEXT]</b> - allows the user to associate a number with a string and then later use the "SET" <a href="#internal_variables">variable</a> to recall that string.</li>
+<li><b>&gt;&gt;&gt; constant [NUMBER] [TEXT]</b> - sets constant - only set the first time that it's referenced, other instances are ignored. This allows some flexibility for using "full" styles on documents. See the "CONSTANT" <a href="#internal_variables">variable</a> below.</li>
+<li><b>&gt;&gt;&gt; comment [TEXT]</b> - a single line comment that will be ignored by the parser</li>
+</ul>
+
+<p class="header">Indicate start or end positions:</p>
+<ul>
+<li><b>&gt;&gt;&gt; comment ["start" OR "end"]</b> - Like above, except that multiple lines can be presented and ignored by the parser</li>
+<li><b>&gt;&gt;&gt; head ["start" OR "end"]</b> - indicates a section that goes into the html header</li>
+</ul>
+
+<p class="header">Plain text and HTML:</p>
+<ul>
+<li>Anything that needs to be parsed as plain html doesn't need to be preceded with anything</li>
+</ul>
+
+<p class="header"><b>Note:</b> Other than the following exceptions, the output from all lines beginning with "&gt;&gt;&gt;" will be surrounded by new-line characters in the output html:</p>
+<ul>
+<li>var</li>
+<li>link</li>
+<li>comment (won't actually create any output)</li>
+</ul>
+</div>
+<div id="item_examples" class="section">
+<h1>Examples</h1>
+
+<p>At its most basic, an item really only needs a display name and a description.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare item steve 1
+&gt;&gt;&gt; disp_name Steve
+&gt;&gt;&gt; description start
+Steve's just a pretty normal guy who's bad at growing facial hair
+&gt;&gt;&gt; description end</pre>
+
+<p>As items progress through the story, their descriptions will likely become more complicated, often referencing other items.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare item steve 46
+&gt;&gt;&gt; disp_name Steve "The Dreamstopper" Byant
+&gt;&gt;&gt; description start
+Steve thought that he was just a normal guy, until
+&gt;&gt;&gt; ilink summer_festival one day
+he was approached by a
+&gt;&gt;&gt; ilink billy_the_wizard mysterious wizard
+who granted him
+&gt;&gt;&gt; ilink steve_powers mystical powers
+&gt;&gt;&gt; no_new_line
+. Since that day, it has been Steve's job to fight against
+&gt;&gt;&gt; ilink doom_ninjas The Ninjas of Doom
+&gt;&gt;&gt; no_new_line
+!
+&gt;&gt;&gt; description end</pre>
+
+<p>Depending on how detailed you want to be, you can also use the "item_data" command keyword to add specifics about a character or item within the story.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare item steve 1
+&gt;&gt;&gt; disp_name Steve
+&gt;&gt;&gt; disp_image images/steve1.png
+&gt;&gt;&gt; comment weight
+&gt;&gt;&gt; item_data 179 lbs
+&gt;&gt;&gt; comment height
+&gt;&gt;&gt; item_data 5'6"
+&gt;&gt;&gt; comment hair
+&gt;&gt;&gt; item_data Dusty brown; nearly trimmed
+&gt;&gt;&gt; comment eye color
+&gt;&gt;&gt; item_data Hazel
+&gt;&gt;&gt; description start
+Steve's just a pretty normal guy who's bad at growing facial hair
+&gt;&gt;&gt; description end</pre>
+</div>
+</div>
+
+<div id="categories" class="section">
+<h1>Categories</h1>
+
+<p>It's convenient to be able to group <a href="#items">items</a> into categories. These categories can be as broad ("characters" and "settings" for example) or narrow ("Possessions that Gary currently has in his left pocket") as you want them to be. An item can belong to multiple categories or no category at all, and you can set a start and end page ID for when they belong to that category.</p>
+
+<div id="category_declaration" class="section">
+<h1>Declaration</h1>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare category [NAME] [CATEGORY] [START ID] [END ID]</pre>
+
+<ul>
+<li><b>NAME</b> - The internal name of the <a href="#items">item</a> (as used when declaring the item).</li>
+<li><b>CATEGORY</b> - The name of the category that you're specifying it as belonging to. Category names cannot include spaces, tabs, slashes, question-marks, or ampersands.</li>
+<li><b>START ID</b> - The first page on which this item belonged to this category. You can leave this blank or use an underscore ("_") to indicate ID "0"</li>
+<li><b>End ID</b> - The last page on which this item belonged to this category. You can leave this blank or use an underscore ("_") to indicate ID "999999.99"</li>
+</ul>
+</div>
+<div id="category_examples" class="section">
+<h1>Examples</h1>
+
+<p>For more straightforward categories, it makes sense to not need a start or end page</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare category characters steve</pre>
+
+<p>For more complex categories that change as the story progresses, start and end pages can be important - for example, if a character switches from being in one group to being in another. In the following example, we see Steve going from being unaware of the conflict between the wizards and ninjas on page 25 to becoming a wizard on page 26. Billy (the wizard) stops being a wizard on page 48 (presumably because he dies). Finally Robert (the ninja) stops being a ninja and becomes a wizard on page 45.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare category people_unaware steve 0 25
+&gt;&gt;&gt;&gt;&gt; declare category ninjas robert 0 44
+&gt;&gt;&gt;&gt;&gt; declare category wizards billy_the_wizard 0 47
+&gt;&gt;&gt;&gt;&gt; declare category wizards steve 26
+&gt;&gt;&gt;&gt;&gt; declare category wizards robert 45
+&gt;&gt;&gt;&gt;&gt; declare category deceased billy_the_wizard 48</pre>
+</div>
+</div>
+
+<div id="styles" class="section">
+<h1>Styles</h1>
+
+<p>Having <a href="#items">items</a> is all well and good, but you need a way to display them. This is what styles accomplish. They're blocks of html code interspersed with <a href="#about_command_keywords">command keywords</a> in order to make them more versatile.</p>
+
+<div id="style_declaration" class="section">
+<h1>Declaration</h1>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style [NAME] [ID] [TYPE] (after this, a new line followed by the desired content)</pre>
+
+<ul>
+<li><b>NAME</b> - The internal name used to reference the style. Names cannot include spaces, tabs, slashes, question-marks, or ampersands.</li>
+<li><b>ID</b> - An ID number associated with a URI using a "<a href="#names">name</a>" object. ID numbers indicate the sequence the URIs are supposed to go in. When a style is queried, the highest ID number equal to or lesser than the ID of the current URI will be returned.</li>
+<li><b>TYPE</b> - A Style object can be of the following types:<ul>
+<li><b>full</b> - This style type defines the start and end of a full web page. The opening &lt;body&gt; tag is expected to be within "full" styles. Be aware that the following html tags will be added grammatically: &lt;html&gt;, &lt;head&gt;, &lt;/head&gt;, &lt;/body&gt;, &lt;/html&gt;.</li>
+<li><b>section</b> - This style focuses on individual sections of content in which items will be listed. So for example, a full page might have sections for "characters" and "locations"; section styles will define what frames each of the individual items in those sections.</li>
+<li><b>single</b> - This style is for webpages displayed within <a href="#iframe1">the iframe</a> showing only a single item. Like the "full" type, the opening &lt;body&gt; tag is expected to be present.</li>
+<li><b>block</b> - This style is for blocks of html content that you might want to repeat or use within other styles. For example, they might be used for a header or footer. Typically blocks should not contain the "&gt;&gt;&gt; repeat" or "&gt;&gt;&gt; content" <a href="#about_command_keywords">command keywords</a>. Block styles are called using the "&gt;&gt;&gt; block" command keyword. Note that there are a number of command keywords that can be used within block styles, but depending on where they're placed, they may not necessarily have the desired effect.</li></ul></li>
+</ul>
+</div>
+<div id="style_command_keywords" class="section">
+<h1>Command Keywords</h1>
+
+<p class="header">Regular command keywords:</p>
+<ul>
+<li><b>&gt;&gt;&gt; var [VARIABLE NAME]</b> - a variable to be interpreted by the script (see list of <a href="#internal_variables">variables</a> below)</li>
+<li><b>&gt;&gt;&gt; link [ITEM NAME]</b> - an item name to convert into a URL</li>
+<li><b>&gt;&gt;&gt; ilink [ITEM NAME] [TEXT]</b> - Convert this to a link that will be opened in <a href="#iframe1">the iframe</a></li>
+<li><b>&gt;&gt;&gt; plink [TEXT]</b> - Convert this to a link for the previous version of the current <a href="#items">item</a></li>
+<li><b>&gt;&gt;&gt; nlink [TEXT]</b> - Convert this to a link for the next version of the current <a href="#items">item</a> (only on single item view)</li>
+<li><b>&gt;&gt;&gt; content</b> - the next level of content in the "full"-&gt;"section"-&gt;"item" chain, or <a href="#iframe1">the iframe</a> for "full" styles that single pages will go into.</li>
+<li><b>&gt;&gt;&gt; section_head</b> - parses and outputs the content of the section header</li>
+<li><b>&gt;&gt;&gt; section_foot</b> - parses and outputs the content of the section footer</li>
+<li><b>&gt;&gt;&gt; block [STYLE NAME]</b> - used to call a block style.</li>
+<li><b>&gt;&gt;&gt; no_new_line</b> - prevents the output from the previous line from ending in a new line character. Useful for some spacing weirdness</li>
+<li><b>&gt;&gt;&gt; set [NUMBER] [TEXT]</b> - allows a user to associate a number with a string and then later use the "SET" <a href="#internal_variables">variable</a> to recall that string.</li>
+<li><b>&gt;&gt;&gt; constant [NUMBER] [TEXT]</b> - sets constant - only set the first time that it's referenced, other instances are ignored. This allows some flexibility for using "full" styles on documents. See the "CONSTANT" <a href="#internal_variables">variable</a> below.</li>
+<li><b>&gt;&gt;&gt; comment [TEXT]</b> - a single line comment that will be ignored by the parser</li>
+</ul>
+
+<p class="header">Indicate start or end positions</p>
+<ul>
+<li><b>&gt;&gt;&gt; repeat ["start" OR "end"]</b> - (only in "section" and "full") Everything in between repeats for each section or item (if multiple starts are present before an end, they will be used in sequence and loop until all sections or items have been used)</li>
+<li><b>&gt;&gt;&gt; comment ["start" OR "end"]</b> - Like above, except that multiple lines can be presented and ignored by the parser</li>
+<li><b>&gt;&gt;&gt; not_first ["start" OR "end"]</b> - (only in "section", "full", and "block") Apply this to all items but the first</li>
+<li><b>&gt;&gt;&gt; not_last ["start" OR "end"]</b> - (only in  "section", "full", and "block") Apply this to all items but the last</li>
+<li><b>&gt;&gt;&gt; is_first ["start" OR "end"]</b> - (only in "section", "full", and "block") Apply this only to the first item</li>
+<li><b>&gt;&gt;&gt; is_last ["start" OR "end"]</b> - (only in  "section", "full", and "block") Apply this only to the last item</li>
+<li><b>&gt;&gt;&gt; is_prev ["start" OR "end"]</b> - (only in "single", "section", and "block") data that only appears if there's a previous item</li>
+<li><b>&gt;&gt;&gt; is_next ["start" OR "end"]</b> - (only in "single" and "block") data that only appears if there's a next item</li>
+<li><b>&gt;&gt;&gt; no_prev ["start" OR "end"]</b> - (only in "single", "section", and "block") data that only appears if there is no previous item</li>
+<li><b>&gt;&gt;&gt; no_next ["start" OR "end"]</b> - (only in "single" and "block") data that only appears if there is no next item</li>
+<li><b>&gt;&gt;&gt; is_int_prev ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's a previous internal page</li>
+<li><b>&gt;&gt;&gt; is_int_next ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's a next internal page</li>
+<li><b>&gt;&gt;&gt; not_int_prev ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's no previous internal page</li>
+<li><b>&gt;&gt;&gt; not_int_next ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's no next internal page</li>
+<li><b>&gt;&gt;&gt; head ["start" OR "end"]</b> - indicates a section that goes into the header</li>
+<li><b>&gt;&gt;&gt; iframe ["start" OR "end"]</b> - indicates a section that goes into the div that surrounds <a href="#iframe1">the iframe<a/></li>
+</ul>
+
+<p class="header">Special data for "full" styles:</p>
+<ul>
+<li><b>&gt;&gt;&gt; single [STYLE NAME]</b> - declare the single item style that should be used for <a href="#iframe1">the iframe</a></li>
+</ul>
+
+<p class="header">Plain HTML and other information:</p>
+<ul>
+<li>Anything that needs to be parsed as plain html doesn't need to be preceded with anything</li>
+<li>In "full" styles, the "content" call is where the script will request the content for the upcoming section, so if you plan to have sections or items, "content" NEEDS to be present.</li>
+<li>In "section" styles, the "repeat" call is when the script will request the content for the next item, so if you plan to have items, "repeat" NEEDS to be present - even if you know that there will only be one item.</li>
+</ul>
+
+<p class="header">Note: Other than the following exceptions, the output from all lines beginning with "&gt;&gt;&gt;" will be surrounded by new-line characters in the output html:</p>
+<ul>
+<li>var</li>
+<li>link</li>
+<li>comment (won't actually create any output)</li>
+</ul>
+</div>
+<div id="style_examples" class="section">
+<h1>Examples</h1>
+
+<p>In the following examples, we have two "full" styles (one for <a href="#pages_and_lists">pages</a> and one for <a href="#pages_and_lists">lists</a>), a section style, a single style, and a few block styles.</p>
+
+<p>The two full styles barely contain any content at all before calling a block style. In doing this, they can set CSS for the <a href="#pages_and_lists">page</a> that they're creating, and then both call the same block style, but have key elements of it appear differently as a result of the CSS that was defined</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style style1_full 1 full
+&gt;&gt;&gt; head start
+	&lt;style&gt;
+		span.page_hidden {display:none;}
+	&lt;/style&gt;
+&gt;&gt;&gt; head end
+&gt;&gt;&gt; block _style1_full</pre>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style style1_full_list 1 full
+&gt;&gt;&gt; head start
+	&lt;style&gt;
+		div#footer {display:none;}
+		span.list_hidden {display:none;}
+	&lt;/style&gt;
+&gt;&gt;&gt; head end
+&gt;&gt;&gt; block _style1_full</pre>
+
+<p>The first block style declares a single style that will be used, and then makes use of the "&gt;&gt;&gt; constant" <a href="#about_command_keywords">keyword</a> in order to set the title of the page. It sets some CSS of its own (including calling another block style), builds out the top of the page, and then between "&gt;&gt;&gt; repeat start" and "&gt;&gt;&gt; repeat end" calls the section style (using the "&gt;&gt;&gt; content" <a href="#about_command_keywords">command keyword</a>), then ensures that each section will have a divider between it and the next.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style _style1_full 1 block
+&gt;&gt;&gt; single style1_single
+&gt;&gt;&gt; constant 0 The Epic Tale of Steve the Wizard - Characters and Locations
+&gt;&gt;&gt; head start
+	&lt;title&gt;
+&gt;&gt;&gt; var CONSTANT 0
+&lt;/title&gt;
+	&lt;style&gt;
+		h2 {margin-top:5px;margin-bottom:0px;}
+		h1 {margin-bottom:2px;}
+&gt;&gt;&gt; block style1_link_styles
+	&lt;/style&gt;
+&gt;&gt;&gt; head end
+&lt;body style="background-color:#222222;margin:0px;text-align:center;"&gt;
+	&lt;div style="max-width:840px;min-width:400px;background-color:#f8f8f8;margin:auto;min-height:100%"&gt;
+		&lt;div id="title"&gt;
+			&lt;h1 style="padding-top:5px;"&gt;
+&gt;&gt;&gt; var CONSTANT 0
+&lt;/h1&gt;
+			&lt;div style="margin-bottom:15px;"&gt;
+				&lt;span class="list_hidden"&gt;&lt;a href="
+&gt;&gt;&gt; var SOURCE_URL
+"&gt;Source Page&lt;/a&gt;&lt;/span&gt;&lt;span class="page_hidden"&gt;&lt;a href="
+&gt;&gt;&gt; var PAGE_URL
+"&gt;All Story Elements Relevant on the Current Page&lt;/a&gt;&lt;/span&gt;
+
+			&lt;/div&gt;
+		&lt;/div&gt;
+		&lt;div id="content" style="margin-left:10px;margin-right:10px;padding-bottom:20px;"&gt;
+&gt;&gt;&gt; repeat start
+&gt;&gt;&gt; content
+&gt;&gt;&gt; not_last start
+			&lt;br /&gt;&lt;hr /&gt;&lt;br /&gt;
+&gt;&gt;&gt; not_last end
+&gt;&gt;&gt; repeat end
+		&lt;/div&gt;
+&gt;&gt;&gt; block style1_footer
+	&lt;/div&gt;
+&gt;&gt;&gt; iframe start
+&lt;div style="position:relative;top:40px;text-align:center;margin:auto;width:calc(100% - 104px);height:calc(100% - 484px);max-width:780px;max-height:calc(100% - 484px);border:2px solid black;background-color:#f8f8f8"&gt;
+&gt;&gt;&gt; content
+&lt;/div&gt;
+&gt;&gt;&gt; iframe end</pre>
+
+<p>Here are the other block styles that were called above - one defining some CSS rules for links, and the other providing a footer that allows the user to navigate forward and backward between <a href="#pages_and_lists">pages</a> (which is not typically necessary - we're expecting people to be linking to these pages from the <a href="#source_content">main story</a>, not from each other)</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style style1_link_styles 1 block
+		a {text-decoration-line:none;}
+		a:link {color:mediumblue;}
+		a:visited {color:mediumblue;}
+		a:hover {color:green;}
+		a:active {color:green;}</pre>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style style1_footer 1 block
+		&lt;div id="footer"&gt;
+&gt;&gt;&gt; is_int_prev start
+			&lt;a href="
+&gt;&gt;&gt; var PREV_PAGE
+"&gt;prev&lt;/a&gt;
+&gt;&gt;&gt; comment By putting a "is_int_next" block within an "is_int_prev" block, we create a situation where the contents will only be output if both are true.
+&gt;&gt;&gt; is_int_next start
+&gt;&gt;&gt; is_int_next end
+&gt;&gt;&gt; is_int_prev end
+&gt;&gt;&gt; is_int_next start
+			&lt;a href="
+&gt;&gt;&gt; var NEXT_PAGE
+"&gt;next&lt;/a&gt;
+&gt;&gt;&gt; is_int_next end
+		&lt;/div&gt;</pre>
+
+<p>The section style defines even more CSS. It creates a table into which the content from the items will be placed. It uses the "&gt;&gt;&gt; var" command keyword to call the display name and the image for each <a href="#items">item</a>, and then, if there's a previous version of the item, it includes a link to that previous version with the "&gt;&gt;&gt; plink" <a href="#about_command_keywords">command keyword<a/>.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style style1_section 1 section
+&gt;&gt;&gt; head start
+&lt;style&gt;
+	table {text-align: start;border-collapse: separate;border-spacing: 2px;border: 0px solid grey;}
+	th {font-weight: bold;}
+&lt;/style&gt;
+&gt;&gt;&gt; head end
+			&lt;div id="section_
+&gt;&gt;&gt; var SECT_NUM
+"&gt;
+				&lt;h2&gt;
+&gt;&gt;&gt; var SECTION_NAME
+&lt;/h2&gt;
+&gt;&gt;&gt; section_head
+&lt;span class="list_hidden" style="font-size:75%;"&gt;(&lt;a href="
+&gt;&gt;&gt; var LIST_URL
+"&gt; 
+&gt;&gt;&gt; no_new_line
+&gt;&gt;&gt; var SET 1
+&lt;/a&gt;)&lt;/span&gt;
+				&lt;table&gt;
+&gt;&gt;&gt; comment Everything within the "repeat" block will be repeated over and over until all of the items are output.
+&gt;&gt;&gt; repeat start
+					&lt;tr&gt;
+&gt;&gt;&gt; is_first start
+						&lt;th colspan="2" style="text-align:left;"&gt;
+&gt;&gt;&gt; is_first end
+&gt;&gt;&gt; not_first start
+						&lt;th colspan="2" style="text-align:left;padding-top:15px;"&gt;
+&gt;&gt;&gt; not_first end
+&gt;&gt;&gt; var DISP_NAME
+&lt;/th&gt;
+					&lt;/tr&gt;
+					&lt;tr&gt;
+						&lt;td style="width:1%;vertical-align:top;"&gt;
+							&lt;img style="border:2px solid black;height:100px;width:100px;" src="
+&gt;&gt;&gt; var IMAGE
+" /&gt;
+						&lt;/td&gt;
+						&lt;td style="padding-left:10px;"&gt;
+&gt;&gt;&gt; content
+						&lt;/td&gt;
+					&lt;/tr&gt;
+&gt;&gt;&gt; is_prev start
+					&lt;tr&gt;
+						&lt;td style="text-align:center;margin:auto;padding-top:5px;"&gt;
+&gt;&gt;&gt; plink ⇐ prev
+						&lt;/td&gt;
+					&lt;/tr&gt;
+&gt;&gt;&gt; is_prev end
+&gt;&gt;&gt; repeat end
+				&lt;/table&gt;
+			&lt;/div&gt;</pre>
+
+<p>Finally, we have a single style. Note that the body is similar to how the body of the full styles were laid out, and the process of displaying the <a href="#items">item</a> details is similar to how the section style was laid out - but with the addition of a link that allows the user to view the next version of the item as well.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare style style1_single 1 single
+&gt;&gt;&gt; head start
+	&lt;style&gt;
+&gt;&gt;&gt; block style1_link_styles
+		table {text-align: start;border-collapse: separate;border-spacing: 2px;border: 0px solid grey;}
+		th {font-weight: bold;}
+	&lt;/style&gt;
+&gt;&gt;&gt; head end
+&lt;body style="background-color:#222222;margin:0px;text-align:center;"&gt;
+	&lt;div style="margin:10px;background-color:#f8f8f8;width:calc(100% - 20px)"&gt;
+		&lt;table style="width:100%;"&gt;
+			&lt;tr&gt;
+				&lt;th colspan="2" style="text-align:left;"&gt;
+&gt;&gt;&gt; var DISP_NAME
+&lt;/th&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+				&lt;td style="width:1%;vertical-align:top;"&gt;
+					&lt;img style="border:2px solid black;height:100px;width:100px;" src="
+&gt;&gt;&gt; var IMAGE
+" /&gt;
+				&lt;/td&gt;
+				&lt;td style="padding-left:10px;"&gt;
+&gt;&gt;&gt; content
+				&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
+				&lt;td colspan="2"&gt;
+					&lt;table style="width:100%;table-layout:fixed;"&gt;
+						&lt;tr&gt;
+							&lt;td style="text-align:left;margin:auto;padding-top:5px;padding-left:15px;"&gt;
+&gt;&gt;&gt; is_prev start
+&gt;&gt;&gt; plink ⇐ prev
+&gt;&gt;&gt; is_prev end
+							&lt;/td&gt;
+							&lt;td style="text-align:center;margin:auto;padding-top:5px;"&gt;
+								&lt;a href="
+&gt;&gt;&gt; var SOURCE_URL
+"&gt;Source Page&lt;/a&gt;
+							&lt;/td&gt;
+							&lt;td style="text-align:right;margin:auto;padding-top:5px;padding-right:15px;"&gt;
+&gt;&gt;&gt; is_next start
+&gt;&gt;&gt; nlink next ⇒
+&gt;&gt;&gt; is_next end
+							&lt;/td&gt;
+						&lt;/tr&gt;
+					&lt;/table&gt;
+				&lt;/td&gt;
+			&lt;/tr&gt;
+		&lt;/table&gt;
+	&lt;/div&gt;</pre>
+</div>
+</div>
+
+
+
+
+<div id="content" class="section">
+<h1>Content</h1>
+
+<p>So "<a href="#items">items</a>" are the information we're presenting and "<a href="#sytles">styles</a>" are the templates that outline how to present those items. The one thing that we're missing is how to know which items and styles to present at any given time. That's what "content" does - it outline the styles and items and what order to present them in, as well as some details relevant how we want those styles to be presented.</p>
+<div id="content_declaration" class="section">
+<h1>Declaration</h1>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content [ID] [TYPE] [NAME] (after this, a new line followed by the desired content)</pre>
+
+<ul>
+<li><b>ID</b> - An ID number associated with a URI using a "<a href="#names">name</a>" object. ID numbers indicate the sequence the URIs are supposed to go in. When content is queried, the highest ID number equal to or lesser than the ID of the current URI will be returned.</li>
+<li><b>TYPE</b> - A content object can be of the following types:<ul>
+<li><b>page</b> - Content related to characters, items, etc. that are specifically relevant to a specific page of source content.</li>
+<li><b>list</b> - Content for displaying all items of a specific type that have appeared up to a specific page of source content.</li>
+<li><b>block</b> - A block of content details that can be called by another content object using the "&gt;&gt;&gt; block" <a href="#about_command_keywords">command keyword</a>.</li></ul></li>
+<li><b>NAME</b> - This varies depending on the content type. Names cannot include spaces, tabs, slashes, question-marks, or ampersands.<ul>
+<li><b>For type "page"</b> - the "name" field should not be used either in creation or deletion.</li>
+<li><b>For type "list"</b> - the "name" field has to match the item <a href="#categories">category</a> that's being displayed.</li>
+<li><b>For type "block"</b> - the "name" field can be what ever you want. That name will be used to call that block within other content objects.</li></ul></li>
+</ul>
+</div>
+<div id="content_command_keywords" class="section">
+<h1>Command Keywords</h1>
+
+<p>Content is handled by a different parser than <a href="#items">items</a> and <a href="#styles">styles</a> (though the headers and footers within content are an exception to this, as they will be parsed when they are called within the style). Here are the special <a href="#about_command_keywords">command keywords</a> for parsing content:</p>
+
+<p class="header">Special command keywords for content</p>
+<li><b>&gt;&gt;&gt; block [BLOCK NAME]</b> - The name of a content block. This line will be replaced by all lines within that content block</li>
+<li><b>&gt;&gt;&gt; style [FULL STYLE NAME]</b> - Declares the "full" <a href="#style">style</a> for this content.</li>
+<li><b>&gt;&gt;&gt; sections [LIST OF SPACE SEPARATED SECTION ID's]</b> - (only within "page" and "block" types) The list of the sections in the order that they will go in.</li>
+<li><b>&gt;&gt;&gt; section [SECTION ID]</b> - (only within "page" and "block" types) An identifier for the section. Note that this won't be displayed and as such can be arbitrary, so long as none are repeated. This must be declared before any of the <a href="#about_command_keywords">command keywords</a> below.</li>
+<li><b>&gt;&gt;&gt; category [CATEGORY]</b> - (only within "page" and "block" types) The <a href="#items">items</a> listed in this section will correlate to a <a href="#categories">category</a> per the <a href="#mysql2">cp_categories table</a></li>
+<li><b>&gt;&gt;&gt; s_name [STRING]</b> - A display name for the section, referenced with the "SECTION_NAME" variable</li>
+<li><b>&gt;&gt;&gt; s_style [SECTION STYLE NAME]</b> - The name of the section <a href="#styles">style</a> that will be used for the section</li>
+<li><b>&gt;&gt;&gt; items [LIST OF SPACE SEPARATED ITEMS]</b> - (only within "page" and "block" types) The list of the <a href="#items">items</a> that will appear in this section, in the order that they will go in.</li>
+<li><b>&gt;&gt;&gt; header ["start" OR "end"]</b> - Everything within these tags will be interpreted by the <a href="#items">item</a> and <a href="#styles">style</a> parser rather than the content parser. Called by the "section_head" <a href="#about_command_keywords">command keyword</a></li>
+<li><b>&gt;&gt;&gt; footer ["start" OR "end"]</b> - Everything within these tags will be interpreted by the style parser rather than the content parser. Called by the "section_foot" command keyword</li>
+
+<p>And here are the command keywords that can be used within the header or footer</p>
+
+<p class="header">Regular command keywords:</p>
+<li><b>&gt;&gt;&gt; var [VARIABLE NAME]</b> - a variable to be interpreted by the script (see list of <a href="#internal_variables">variables</a> below)</li>
+<li><b>&gt;&gt;&gt; link [ITEM NAME]</b> - an <a href="#items">item</a> name to convert into a URL</li>
+<li><b>&gt;&gt;&gt; ilink [ITEM NAME] [TEXT]</b> - Convert this to a link that will be opened in <a href="#iframe1">the iframe</a></li>
+<li><b>&gt;&gt;&gt; no_new_line</b> - prevents the output from the previous line from ending in a new line character. Useful for some spacing weirdness</li>
+<li><b>&gt;&gt;&gt; set [NUMBER] [TEXT]</b> - allows a user to associate a number with a string and then later use the "SET" <a href="#internal_variables">variable</a> to recall that string.</li>
+<li><b>&gt;&gt;&gt; constant [NUMBER] [TEXT]</b> - sets constant - only set the first time that it's referenced, other instances are ignored. This allows some flexibility for using "full" styles on documents. See the "CONSTANT" <a href="#internal_variables">variable</a> below.</li>
+<li><b>&gt;&gt;&gt; comment [TEXT]</b> - a single line comment that will be ignored by the parser</li>
+
+<p class="header">Indicate start or end positions</p>
+<li><b>&gt;&gt;&gt; comment ["start" OR "end"]</b> - Like above, except that multiple lines can be presented and ignored by the parser</li>
+<li><b>&gt;&gt;&gt; is_int_prev ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's a previous internal <a href="#pages_and_lists">page</a></li>
+<li><b>&gt;&gt;&gt; is_int_next ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's a next internal page</li>
+<li><b>&gt;&gt;&gt; not_int_prev ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's no previous internal page</li>
+<li><b>&gt;&gt;&gt; not_int_next ["start" OR "end"]</b> - (only in "full" or "block) data that only appears if there's no next internal page</li>
+<li><b>&gt;&gt;&gt; head ["start" OR "end"]</b> - indicates a text that will go into the header</li>
+<li><b>&gt;&gt;&gt; iframe ["start" OR "end"]</b> - indicates a text that will go into the div that surrounds <a href="#iframe1">the iframe</a></li>
+
+<p class="header">Plain text and HTML:</p>
+<li>Anything that needs to be parsed as plain html doesn't need to be preceded with anything</li>
+
+<p class="header">Note: Other than the following exceptions, the output from all lines beginning with "&gt;&gt;&gt;" will be surrounded by new-line characters in the output html:</p>
+<li>var</li>
+<li>link</li>
+<li>comment (won't actually create any output) </li>
+
+</div>
+<div id="content_examples" class="section">
+<h1>Examples</h1>
+
+<p>Lets look at a number of different page, list, and block content objects, as well as one example of how a page content object and the block content objects it calls would look if they had been declared as one.</p>
+
+<p>List content objects are fairly simple - they only really need a full page style, a section style, and a section display name</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 list character
+&gt;&gt;&gt; style style1_full_list
+&gt;&gt;&gt; s_name Characters
+&gt;&gt;&gt; s_style style1_section</pre>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 list setting
+&gt;&gt;&gt; style style1_full_list
+&gt;&gt;&gt; s_name Settings
+&gt;&gt;&gt; s_style style1_section</pre>
+
+<p>Page content objects are move complex. Here's an example of a page that has three sections ("characters", items", and "settings"), each of them having at least one <a href="#items">item</a> within. Notice that the "&gt;&gt;&gt; sections" <a href="#about_command_keywords">command keyword</a> specifies the order that they will be displayed in, but after that point, the details for each section does not need to be referenced in that order. Also notice that while the headers for each section COULD be used to output actual HTML content, her they're just being used to set a <a href="#internal_variables">variable</a> that will be called later in the section style.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 page
+&gt;&gt;&gt; style style1_full
+&gt;&gt;&gt; sections characters items settings
+&gt;&gt;&gt; section characters
+&gt;&gt;&gt; category character
+&gt;&gt;&gt; s_name Characters
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; header start
+&gt;&gt;&gt; set 1 All Characters So Far
+&gt;&gt;&gt; header end
+&gt;&gt;&gt; items steve trevor_the_dog
+&gt;&gt;&gt; section settings
+&gt;&gt;&gt; category setting
+&gt;&gt;&gt; s_name Settings
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; header start
+&gt;&gt;&gt; set 1 All Settings So Far
+&gt;&gt;&gt; header end
+&gt;&gt;&gt; items steve_house
+&gt;&gt;&gt; section items
+&gt;&gt;&gt; category item
+&gt;&gt;&gt; s_name Items
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; header start
+&gt;&gt;&gt; set 1 All Items So Far
+&gt;&gt;&gt; header end
+&gt;&gt;&gt; items book_collection</pre>
+
+<p>If the sections that we want to display and the <a href="#items">items</a> within are the same on the first <a href="#pages_and_lists">page</a> as the second page, we do not need to declare content for the second page - even if the description for one of those items has changed! However, lets say that the second page introduces another character, Fred. Declaring all of that again for one small change sounds burdensome. Instead, lets separate out the content for the first page into blocks.</p>
+
+<p>The content object for the first page now looks like this:</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 page
+&gt;&gt;&gt; style style1_full
+&gt;&gt;&gt; sections characters settings items
+&gt;&gt;&gt; block characters_dec
+&gt;&gt;&gt; items steve trevor_the_dog
+&gt;&gt;&gt; block settings_items</pre>
+
+<p>Outside of the list of characters that are present, we're probably going to keep the specifics for the characters section the same for quite a while, so let's put that into its own block, and then we can just keep calling that same block with every change made</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 block characters_dec
+&gt;&gt;&gt; section characters
+&gt;&gt;&gt; category character
+&gt;&gt;&gt; s_name Characters
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; header start
+&gt;&gt;&gt; set 1 All Characters So Far
+&gt;&gt;&gt; header end</pre>
+
+<p>Assuming we know that the items and settings are going to stay the same for a while, we can push those off into their own block, and then push the specifics for each of those into their own blocks as well</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 block settings_items
+&gt;&gt;&gt; block settings_dec
+&gt;&gt;&gt; items steve_house
+&gt;&gt;&gt; block items_dec
+&gt;&gt;&gt; items book_collection</pre>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 block settings_dec
+&gt;&gt;&gt; section settings
+&gt;&gt;&gt; category setting
+&gt;&gt;&gt; s_name Settings
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; header start
+&gt;&gt;&gt; set 1 All Settings So Far
+&gt;&gt;&gt; header end</pre>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 1 block items_dec
+&gt;&gt;&gt; section items
+&gt;&gt;&gt; category item
+&gt;&gt;&gt; s_name Items
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; header start
+&gt;&gt;&gt; set 1 All Items So Far
+&gt;&gt;&gt; header end</pre>
+
+<p>The upshot of this is that when we introduce Fred on page two, the entire content object we have to create will look like this:<p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare content 2 page
+&gt;&gt;&gt; style style1_full
+&gt;&gt;&gt; sections characters settings items
+&gt;&gt;&gt; block characters_dec
+&gt;&gt;&gt; items steve trevor_the_dog fred
+&gt;&gt;&gt; block settings_items</pre>
+
+<p>So tiny!</p>
+</div>
+</div>
+
+<div id="documents" class="section">
+<h1>Documents</h1>
+
+<p>There will likely be circumstances where you need to have a webpage that is neither a <a href="#pages_and_lists">page</a> nor a <a href="#pages_and_lists">list</a> and doesn't have a URL tied to <a href="#source_content">source content</a>. This are what documents are here to accomplish. They are simply a URI on the local site, and correlating html content that should be displayed when that URI is requested.</p>
+
+<div id="document_declaration" class="section">
+<h1>Declaration</h1>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare document [URI] (after this, a new line followed by the desired content)</pre>
+
+<li><b>URI</b> - the URI on the local site at which this specific document content will be displayed.</li>
+</div>
+<div id="document_command_keywords" class="section">
+<h1>Command Keywords</h1>
+
+<p class="header">Regular command keywords:</p>
+<li><b>&gt;&gt;&gt; var [VARIABLE NAME]</b> - a variable to be interpreted by the script (see list of <a href="#internal_variables">variables</a> below)</li>
+<li><b>&gt;&gt;&gt; no_new_line</b> - prevents the output from the previous line from ending in a new line character. Useful for some spacing weirdness</li>
+<li><b>&gt;&gt;&gt; set [NUMBER] [TEXT]</b> - allows a user to associate a number with a string and then later use the "SET" <a href="#internal_variables">variable</a> to recall that string.</li>
+<li><b>&gt;&gt;&gt; constant [NUMBER] [TEXT]</b> - sets constant - only set the first time that it's referenced, other instances are ignored. This allows some flexibility for using "full" styles on documents. See the "CONSTANT" <a href="#internal_variables">variable</a> below.</li>
+<li><b>&gt;&gt;&gt; comment [TEXT]</b> - a single line comment that will be ignored by the parser</li>
+
+<p class="header">Indicate start or end positions</p>
+<li><b>&gt;&gt;&gt; comment ["start" OR "end"]</b> - Like above, except that multiple lines can be presented and ignored by the parser</li>
+<li><b>&gt;&gt;&gt; head ["start" OR "end"]</b> - indicates a section that goes into the header</li>
+
+<p class="header">Special data for "documents":</p>
+<li><b>&gt;&gt;&gt; style [FULL STYLE NAME] [PAGE ID NUMBER]</b> - When defining documents, if this is used, the style named will be output. Everything after this point within the document definition will be output with the "&gt;&gt;&gt; content" command keyword.</li>
+
+<p class="header">Plain HTML and other information:</p>
+<li>Anything that needs to be parsed as plain html doesn't need to be preceded with anything</li>
+
+<p class="header">Note: Other than the following exceptions, the output from all lines beginning with "&gt;&gt;&gt;" will be surrounded by new-line characters in the output html:</p>
+<li>var</li>
+<li>link</li>
+<li>comment (won't actually create any output)</li>
+</div>
+<div id="document_examples" class="section">
+<h1>Examples</h1>
+
+<p>It's always good to have at least one document defined for the document root of the webpage (represented as "/"). Here's an example of a simple document that you might place there.</p>
+
+<pre>&gt;&gt;&gt;&gt;&gt; declare document /
+&gt;&gt;&gt; comment By setting a constant here and then calling a full page style, we can change text that would typically show up with that full page style.
+&gt;&gt;&gt; constant 0 The Epic Tale of Steve the Wizard - Characters and Locations (Main Page)
+&gt;&gt;&gt; style style1_full 1
+&lt;br /&gt;&lt;p&gt;You have arrived at a repository of characters, locations, and other odds-and-ends for "The Epic Tale of Steve the Wizard" - a web comic / story by Steve "not a wizard" Bryant that updates twice weekly.&lt;/p&gt;
+&lt;p&gt;&lt;a href="
+&gt;&gt;&gt; var MAIN_EXT_URL
+"&gt;Go to the main page&lt;/a&gt;&lt;/p&gt;</pre>
+</div>
+</div>
+</div>
+
+
+<div id="internal_variables" class="section">
+<h1>Internal Variables</h1>
+
+<p>There are a number of variables that can be used with the <a href="#about_command_keywords">command keyword<a/> "var". Here is the full list, broken up loosely by how they can be used and what they produce:</p>
+
+<p class="header">Variables specific to items:</p>
+<ul>
+<li><b>ITEM_NAME</b> - The name used internally to reference this <a href="#items">item</a></li>
+<li><b>DISP_NAME</b> - The display name of an item (note, there's no reason why this cannot contain html)</li>
+<li><b>IMAGE</b> - the image URL for an item. These should be relative to the directory where index.php is located.</li>
+<li><b>ITEM_DATA [NUMBER (starting with 1)]</b> - Other data for the item, stored as an array. So, for example, if you want to have a variable for the age of characters.</li>
+</ul>
+
+<p class="header">Variables specific to sections:</p>
+<ul>
+<li><b>SECTION_NAME</b> - the display name of a section (note, there's no reason why this cannot contain html)</li>
+<li><b>SECT_NUM</b> - the number of the current section (counting starts at zero) (by using this to create html IDs, you can have different CSS apply to different sections)</li>
+<li><b>ITEM_NUM</b> - The number of the current item in the current section (counting starts at zero)</li>
+</ul>
+
+<p class="header">Variables that the end user can set for later use:</p>
+<ul>
+<li><b>SET [NUMBER]</b> - a variable set by the user using the "set" <a href="#about_command_keywords">command keyword</a></li>
+<li><b>CONSTANT [NUMBER]</b> - a constant set by the user using the "constant" <a href="#about_command_keywords">command keyword</a>. Once a constant is set, further attempts to change it will fail silently.</li>
+</ul>
+
+<p class="header">Variables that produce a URL for the <a href="#source_content">source material</a>:</p>
+<ul>
+<li><b>SOURCE_URL</b> - the URL of the source webpage that this page or list is referencing</li>
+<li><b>SOURCE_URI [URI]</b> - creates a URL in the format of: PROTOCOL . "://" . REFERER_BASE . [THE URI PROVIDED]</li>
+<li><b>MAIN_EXT_URL</b> - The URL of the main webpage of the source</li>
+</ul>
+
+<p class="header">Variables that produce a URL for internal material:</p>
+<ul>
+<li><b>MAIN_URL</b> - the URL for the main webpage of this site (not the <a href="#source_content">source<a/> site)</li>
+<li><b>LIST_URL [CATEGORY (optional)]</b>- the URL for the list of the specified <a href="#categories">category</a>. If no category is provided, a link to the category of the current section is produced.</li>
+<li><b>PAGE_URL</b> - the URL for the <a href="#pages_and_lists">page</a> view (so, if you're looking at a <a href="#pages_and_lists">list</a> view or single view, the link to go back to the section of all things from that page).</li>
+<li><b>NEXT_PAGE</b> - (Not available for single styles) the URL of the next internal page</li>
+<li><b>PREV_PAGE</b> - (Not available for single styles) the URL of the previous internal page</li>
+</ul>
+</div>
+<div id="project_files" class="section">
+<h1>Project Files</h1>
+
+<p>Files that are included within the project:</p>
+<uL>
+<li><b>index.php</b> - Calls the other files within the project as needed based on the URIs that are requested</li>
+<li><b>.htaccess</b> - This file contains a number of directives for an Apache webserver that result in traffic for the sie to be redirected where it need to go (usually the index.php file)</li>
+<li><b>edit.php</b> - A rough interface for creating, editing, deleting, or exporting <a href="#internal_objects">objects</a> within the project</li>
+<li><b>includes/initialize.php</b> - Creates the necessary <a href="#mysql2">mysql tables</a> (assuming that there is already a mysql user and database, and that the config file is filled out)</li>
+<li><b>includes/import.php</b> - A file that facilitates importing and deleting content to and from the database</li>
+<li><b>includes/config.php</b> - Includes the configuration to connect to the database as well as specifics about the site in question (this will need to be edited by the user)</li>
+<li><b>includes/parse.php</b> - Includes the functions necessary to parse the <a href="#content">contents</a>, <a href="#items">items</a>, and <a href="#styles">styles</a></li>
+<li><b>includes/url.php</b> - Parses the URL and other data to determine what content needs to be loaded</li>
+<li><b>includes/connect.php</b> - Connects to <a href="#mysql_users">mysql</a> and provides a few functions specific to mysql queries</li>
+<li><b>includes/single.php</b> - Processes and outputs the data for the single page view</li>
+<li><b>includes/js_top_full.txt</b> - JavaScript and CSS that will be used within full page view objects (<a href="#documents">documents</a>, <a href="#pages_and_lists">pages, lists</a>)</li>
+<li><b>includes/js_bottom_full.txt</b> - Additional text for the full page view objects containing the JavaScript that makes the links work</li>
+<li><b>includes/js_single.txt</b> - JavaScript and CSS for the single item view pages</li>
+<li><b>includes/parse2.php</b> - Includes the functions necessary to parse database content when importing, exporting, or editing.</li>
+<li><b>includes/document.php</b> - The processes necessary for loading a <a href="#documents">document</a></li>
+<li><b>includes/edit_functions.php</b> - Additional functions for exporting data</li>
+<li><b>includes/page-list.php</b> - Finishes out the process of displaying <a href="#pages_and_lists">pages and lists</a>.</li>
+<li><b>includes/edit_help.php</b> - helper script for edit.php</li>
+<li><b>includes/edit.js</b> - JavaScript for the edit page</li>
+<li><b>includes/session.php</b> - Initializes session data for editing purposes</li>
+<li><b>includes/documentation.html</b> - Documentation regarding the <a href="#character_page">Character Page project</a></li>
+</ul>
+</div>
+
+<div id="internal_html" class="section">
+<h1>Internally Generated HTML</h1>
+
+There are four major pieces of HTML that are generated by the code within the project. All other HTML will need to be within styles and items.
+<ul>
+<li>The following tags will be added programatically &lt;html&gt;, &lt;head&gt;, &lt;/head&gt;, &lt;/body&gt;, &lt;/html&gt;. Note that the opening &lt;body&gt; tag is expected to be within "full" <A href="#styles">styles</a>.</li>
+<li>The script will create the "next" and "previous" links for <a href="#items">items</a> based on <a href="#about_command_keywords">command keywords</a> within a <a href="#styles">style</a> (more information below)</li>
+<li>The script will create <a href="#iframe1">the iframe</a> element for displaying single item pages based on the "content" <a href="#about_command_keywords">command keyword</a> within "iframe start" and "iframe end" command keywords within the <a href="#styles">style</a> (more information below)</li>
+<li>The script will output initial css and javascript content based on the text within the files includes/js_top_full.txt, includes/js_bottom_full.txt, and includes/js_single.txt</li>
+</ul>
+<div id="links" class="section">
+<h1>Regarding Links</h1>
+
+<p>Any links generated by this project to <a href="#items">items</a> with a single-item view will have the html class "cp_link". They will be presented in the following format:</p>
+
+<pre>&lt;a class="cp_link" href="" onclick="fn_open_link(this);return false;"&gt;link text&lt;/a&gt;</pre>
+
+<p>where the value for "href" will be populated with the URL of the single item view.</p>
+</div>
+<div id="iframe2" class="section">
+<h1>Regarding the Iframe</h1>
+
+<p><a href="#iframe1">The iframe</a> containing the single item view will be put in place with the "&gt;&gt;&gt; content" indicator after beginning an "&gt;&gt;&gt; iframe start" block. It will have the html id "cp_single" and will be in this format:</p>
+
+<pre>&lt;iframe id="cp_single" src=""&gt;&lt;/iframe&gt;</pre>
+
+<p>and the "src" attribute will be populated by JavaScript as needed.</p>
+</div>
+</div>
+
+<div id="error_reporting" class="section">
+<h1>Error Reporting</h1>
+
+<p>At any point where an <a href="#internal_objects">internal object</a> is specified within another internal object, but such an object does not exist, Not only will an error be output to the browser, but it will also be logged using the php error_log() function. So where ever all standard php errors are designated to go, they will end up here as well. These errors all begin with the string "<a href="#characer_page">Character Page</a> at" followed by the requested URI and then a brief explanation of what was requested that did not exist.</p>
+</div>
+<div id="other" class="section">
+<h1>Information that probably won't be userfull to the end user, but I'm including it anyway</h1>
+
+<div id="mysql2" class="section">
+<h1>Database Table Information</h1>
+
+<pre>Table1 (cp_names): four columns - compares the URI to a post number
+	a URI
+	an ID number (not necessarily incrementing)
+	the ID of the page immediately after this one
+	the ID of the page immediately before this one
+Table2 (cp_contents): four columns - a list of content that we'll be working from for each page
+	a number that correlates to table1
+	text describing categories and content items for those categories
+	a type ("page", "list", or "block")
+	a name ("page" types are automatically named "cp_page_con")
+Table3 (cp_items): five columns - the details for an item
+	the name of a content item
+	the ID number
+	text describing that item.
+	The next ID that that item is updated on
+	The previous ID that that item is updated on
+Table4 (cp_styles): four columns - styles and layouts
+	the type of style it is ("full", "section", "single", "block")
+	the name of the style
+	the ID number
+	text describing that style
+Table5 (cp_categories): four columns - what category of item each item is part of
+	an item name
+	the category of item it is (e.g. "character", "setting")
+	the first page ID on which that item belongs to that category
+	the last page ID on which that item belongs to that category
+Table6 (cp_documents): two columns - single webpages, such as a main page or a "contacts" page
+	The URI that the page should be located at (relative to the base uri)
+	Text describing what will be shown there.</pre>
+
+<p>The commands to create these databases look like this:</p>
+
+<pre>CREATE TABLE IF NOT EXISTS cp_names ( URI VARCHAR(100) PRIMARY KEY, ID DECIMAL(8,2), Next DECIMAL(8,2), Previous DECIMAL(8,2) );
+CREATE TABLE IF NOT EXISTS cp_contents ( ID DECIMAL(8,2), Content MEDIUMTEXT, Type VARCHAR(100), Name VARCHAR(100), PRIMARY KEY ( Name, ID, Type ) );
+CREATE TABLE IF NOT EXISTS cp_items ( Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, Next DECIMAL(8,2), Previous DECIMAL(8,2), PRIMARY KEY ( Name, ID ) );
+CREATE TABLE IF NOT EXISTS cp_styles ( Type TINYTEXT, Name VARCHAR(100), ID DECIMAL(8,2), Description LONGTEXT, PRIMARY KEY ( Name, ID ) );
+CREATE TABLE IF NOT EXISTS cp_categories ( Name VARCHAR(100), Category VARCHAR(100), Start DECIMAL(8,2), End DECIMAL(8,2), PRIMARY KEY ( Name, Category, Start ) );
+CREATE TABLE IF NOT EXISTS cp_documents ( URI VARCHAR(100) PRIMARY KEY, Description LONGTEXT );</pre>
+</div>
+
+
+
+
+<div id="content_object" class="section">
+<h1>Further notes on Content and the Content Object</h1>
+
+<p>Below are some notes on how <a href="#contents">content</a> objects are interpreted.</p>
+
+<p><b>Example of a content object</b></p>
+
+<pre>&gt;&gt;&gt; style style1_full
+&gt;&gt;&gt; sections characters settings items
+&gt;&gt;&gt; section characters
+&gt;&gt;&gt; category character
+&gt;&gt;&gt; s_name Characters
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; items steve fred
+&gt;&gt;&gt; header start
+Header text
+&gt;&gt;&gt; header end
+&gt;&gt;&gt; footer start
+Footer text
+&gt;&gt;&gt; footer end
+&gt;&gt;&gt; section settings
+&gt;&gt;&gt; category setting
+&gt;&gt;&gt; s_name Settings
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; items steve_house
+&gt;&gt;&gt; header start
+Header text
+&gt;&gt;&gt; header end
+&gt;&gt;&gt; footer start
+Footer text
+&gt;&gt;&gt; footer end
+&gt;&gt;&gt; section items
+&gt;&gt;&gt; category item
+&gt;&gt;&gt; s_name Items
+&gt;&gt;&gt; s_style style1_section
+&gt;&gt;&gt; items washing_machine
+&gt;&gt;&gt; header start
+Header text
+&gt;&gt;&gt; header end
+&gt;&gt;&gt; footer start
+Footer text
+&gt;&gt;&gt; footer end</pre>
+
+<p><b>Parsing it into an object within php:</b></p>
+
+<p>From there, the parser will transform it into a php object that the script can traverse and pull the necessary information from when necessary. It will also pull the relevant <a href="#items">item</a> and section <a href="#styles">style</a> data and integrate them into that object. If it were represented in JSON, that object would look like this:</p>
+
+<pre>{
+	"style":"style1_full",
+	"order":[
+		"characters",
+		"settings",
+		"items"
+	],
+	"sections":{
+		"characters":{
+			"category":"character",
+			"name":"Characters",
+			"style":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
+			],
+			"header":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED HEADER TEXT"
+			],
+			"footer":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED FOOTER TEXT"
+			],
+			"order":[
+				"steve",
+				"fred"
+			],
+			"items":{
+				"steve":{
+					"ID":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				},
+				"fred":{
+					"ID":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				}
+			}
+		},
+		"settings":{
+			"category":"setting",
+			"name":"Settings",
+			"style":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
+			],
+			"header":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED HEADER TEXT"
+			],
+			"footer":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED FOOTER TEXT"
+			],
+			"order":[
+				"steve_house"
+			],
+			"items":{
+				"steve_house":{
+					"ID":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				}
+			}
+		},
+		"items":{
+			"category":"item",
+			"name":"Items",
+			"style":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED SECTION STYLE TEXT"
+			],
+			"header":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED HEADER TEXT"
+			],
+			"footer":[
+				"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED FOOTER TEXT"
+			],
+			"order":[
+				"washing_machine"
+			],
+			"items":{
+				"washing_machine":{
+					"ID":2,
+					"previous":null,
+					"description":[
+						"AN ARRAY CONTAINING EACH LINE OF THE FULL, UNPARSED ITEM DESCRIPTION"
+					]
+				}
+			}
+		}
+	}
+}</pre>
+</div>
+</div>
+
+</body></html>

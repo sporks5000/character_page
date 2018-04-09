@@ -4,17 +4,13 @@ $v_db_alt_user = '';
 $v_db_alt_password = '';
 
 $v_incdir = '.';
+require( $v_incdir . '/session.php' );
 
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_SESSION['user'] ) && isset( $_SESSION['pass'] ) ) {
 	// use the username and password from the POST data
-	if ( $_POST['user'] ) {
-		$v_db_alt_user = $_POST['user'];
-	}
-	if ( $_POST['pass'] ) {
-		$v_db_alt_password = $_POST['pass'];
-	}
+	$v_db_alt_user = $_SESSION['user'];
+	$v_db_alt_password = $_SESSION['pass'];
 	if ( $_POST['text'] ) {
-		require( $v_incdir . '/config.php' );
 		require( $v_incdir . '/connect.php' );
 		require( $v_incdir . '/parse2.php' );
 		require( $v_incdir . '/edit_functions.php' );

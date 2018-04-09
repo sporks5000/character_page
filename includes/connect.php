@@ -34,6 +34,12 @@ $o_mysql_connection = '';
 if ( $v_db_alt_user && $v_db_alt_password ) {
 	$o_mysql_connection = new mysqli(DB_HOST, $v_db_alt_user, $v_db_alt_password, DB_NAME);
 	if ( $o_mysql_connection->connect_errno ) {
+		if ( isset( $_SESSION['user'] ) ) {
+			unset( $_SESSION['user'] );
+		}
+		if ( isset( $_SESSION['pass'] ) ) {
+			unset( $_SESSION['pass'] );
+		}
 		if ( ! headers_sent() ) {
 			http_response_code(500);
 		}

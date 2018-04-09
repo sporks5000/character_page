@@ -1,12 +1,12 @@
 <?php
 
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
-	$v_incdir = '.';
+$v_incdir = '.';
+require( $v_incdir . '/session.php' );
 
-	$v_db_alt_user = $_POST['user'];
-	$v_db_alt_password = $_POST['pass'];
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_SESSION['user'] ) && isset( $_SESSION['pass'] ) ) {
+	$v_db_alt_user = $_SESSION['user'];
+	$v_db_alt_password = $_SESSION['pass'];
 
-	require( $v_incdir . '/config.php' );
 	require( $v_incdir . '/connect.php' );
 	require( $v_incdir . '/edit_functions.php' );
 
@@ -96,4 +96,6 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	$v_out .= '<input type="submit" value="Cancel" onclick="fn_submit(this)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" value="Submit" onclick="fn_submit(this)"></div>';
 	echo $v_out;
 	fn_close();
+} else {
+	echo "<div>no content</div>";
 }

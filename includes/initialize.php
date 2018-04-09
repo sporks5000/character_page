@@ -4,12 +4,17 @@ $v_db_alt_user = "1";
 $v_db_alt_password = "1";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+	require( $v_incdir . '/session.php' );
+
 	// use the username and password from the POST data
 	if ( $_POST['user'] ) {
 		$v_db_alt_user = $_POST['user'];
+		$_SESSION['user'] = $_POST['user'];
 	}
 	if ( $_POST['pass'] ) {
 		$v_db_alt_password = $_POST['pass'];
+		$_SESSION['pass'] = $_POST['pass'];
 	}
 
 	require( $v_incdir . '/connect.php' );
@@ -51,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	";
 	fn_query_check( "\"documents\"", $v_query, false );
 
-	echo "Tables have been created.\n";
+	echo '<div style="text-align:center">' . "\n" . '<br /><h1>Tables have been created</h1>' . "\n" . '<a href="edit.php">Go to the Edit Page</a>' . "\n" . '</div>';
 	// create a file to indicate that the databases have been initialized
 	touch( $v_incdir . "/" . TABLE_PREFIX . 'initialized' );
 	fn_close();

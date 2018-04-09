@@ -7,12 +7,18 @@ $v_out = '';
 $v_rootdir = dirname( __FILE__ );
 $v_incdir = $v_rootdir . '/includes';
 
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
-	// use the username and password from the POST data
-	$v_db_alt_user = $_POST['user'];
-	$v_db_alt_password = $_POST['pass'];
+require( $v_incdir . '/session.php' );
 
-	require( $v_incdir . '/config.php' );
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['user'] ) && isset( $_POST['pass'] ) ) {
+	// use the username and password from the POST data
+	$_SESSION['user'] = $_POST['user'];
+	$_SESSION['pass'] = $_POST['pass'];
+}
+
+if ( isset( $_SESSION['user'] ) && isset( $_SESSION['pass'] ) ) {
+	$v_db_alt_user = $_SESSION['user'];
+	$v_db_alt_password = $_SESSION['pass'];
+
 	require( $v_incdir . '/connect.php' );
 	require( $v_incdir . '/edit_functions.php' );
 }
@@ -26,6 +32,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	a:link {color:mediumblue;}
 	a:visited {color:mediumblue;}
 	h3 {margin-top:5px;margin-bottom:0px;}
+	input[type=button], input[type=submit] {margin-top:5px;margin-bottom:5px;}
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 <script>
@@ -33,102 +40,25 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 		if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 			echo '$(document).ready(function() {' . "\n" . '$("#type_select").val("' . $_POST['type'] . '")' . "\n" . '});' . "\n";
 		}
+		echo file_get_contents( $v_incdir . '/edit.js' );
 	?>
-	function fn_edit_object(clicked, action) {
-	// when a link is clicked, open it in the background and then remove the old content
-		var link = $(clicked);
-		var type = link.attr('href');
-		var values = link.attr('cp_data');
-		var username = $('#cp_user').val();
-		var password = $('#cp_pass').val();
-		var url;
-		var data = new FormData();
-		data.append("user", username);
-		data.append("pass", password);
-		if ( ! action ) {
-			data.append("type", type);
-			data.append("values", values);
-			url = "includes/edit_help.php"
-		} else if ( action == "delete" ) {
-			if ( ! window.confirm("Are you sure you want to DELETE this object?") ) {
-				return;
-			}
-			data.append("text", ">>>>> delete " + type + " " + values);
-			url = "includes/import.php"
-		}
-		// make the request to includes/edit_help.php
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.onreadystatechange = function() {
-			if (xmlHttp.readyState == 4 && (xmlHttp.status == 200 || xmlHttp.status == 500)){
-				var response = xmlHttp.responseText;
-				var responseDom = $(response);
-				var object = link.closest('.cp_object');
-				object.css('display','none');
-				object.parent().append(responseDom);
-				if ( type == "new" ) {
-					object.parent().after('<div><div class="cp_object"><li><a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' + "</a></li></div></div>\n");
-				}
-			}
-		};
-		xmlHttp.open("POST", url, true);
-		xmlHttp.send(data);
-	}
-	function fn_delete_object(clicked) {
-		fn_edit_object(clicked, "delete");
-	}
-	function fn_submit(clicked) {
-		var button = $(clicked);
-		var action = button.val();
-		var text;
-		if ( action == "Cancel" ) {
-			button.parent().parent().children('.cp_object').css('display','block');
-			button.parent().remove();
-			return;
-		} else if ( action = "Submit" ) {
-			if ( ! window.confirm("Are you sure you want to modify this object?") ) {
-				return;
-			}
-			var text = button.parent().children('textarea').val();
-		}
-		var username = $('#cp_user').val();
-		var password = $('#cp_pass').val();
-		var data = new FormData();
-		data.append("user", username);
-		data.append("pass", password);
-		data.append("text", text);
-		var xmlHttp = new XMLHttpRequest();
-		xmlHttp.onreadystatechange = function() {
-			if (xmlHttp.readyState == 4 && (xmlHttp.status == 200 || xmlHttp.status == 500)){
-				var response = xmlHttp.responseText;
-				var responseDom = $(response);
-				button.parent().after(responseDom);
-				button.parent().remove();
-			}
-		};
-		xmlHttp.open("POST", "includes/import.php", true);
-		xmlHttp.send(data);
-	}
 </script>
 </head>
 <body>
 
 <form action="edit.php" method="post">
-	Username: <input type="text" name="user" id="cp_user"<?php
-if ( $v_db_alt_user ) {
-	echo " value=\"" . $v_db_alt_user . "\"";
+<?php
+if ( ! isset( $_SESSION['user'] ) ) {
+	echo 'Username: <input type="text" name="user" id="cp_user"><br />';
 }
-?>>
-	<br />
-	Password: <input type="password" name="pass" id="cp_pass"<?php
-if ( $v_db_alt_user ) {
-	echo " value=\"" . $v_db_alt_password . "\"";
+if ( ! isset( $_SESSION['pass'] ) ) {
+	echo 'Password: <input type="password" name="pass" id="cp_pass"><br />';
 }
-?>>
-	<br />
+?>
 	Object Type: <select name="type" id="type_select">
 		<option value="select">Select</option>
 		<option value="name">Names</option>
-		<option value="content">Contents</option>
+		<option value="content">Content</option>
 		<option value="item">Items</option>
 		<option value="style">Styles</option>
 		<option value="category">Categories</option>
@@ -147,7 +77,8 @@ function fn_make_row( $v_type, $a_row ) {
 
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 	$v_type = $_POST['type'];
-	$v_out2 = '<div><div class="cp_object"><li><a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' . "</a></li></div></div>\n";
+	$v_out2 .= '<div><div class="cp_object"><li>[<a href="new" onclick="fn_edit_help(this);return false;">HELP' . "</a>]</li></div></div>\n";
+	$v_out2 .= '<div><div class="cp_object"><li>[<a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' . "</a>]</li></div></div>\n";
 
 #========================================================================#
 #== Pull the names and key details of all items in a specific category ==#
@@ -287,7 +218,8 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 			$v_out = substr( $v_out, 0, -1 );
 		}
 
-		$v_out =  'Site Data:<br><textarea name="text" cols="60" rows="20">' . $v_out . '</textarea><br />' . "\n";
+		$v_out = 'Site Data:<br><textarea id="cp_full_content" name="text" cols="60" rows="20">' . $v_out . '</textarea><br />' . "\n";
+
 	}
 
 	$v_out .= "<br /><br /><br /><br /><br />";
@@ -300,7 +232,7 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 </html>
 
 <?php
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
+if ( isset( $o_mysql_connection ) ) {
 	fn_close();
 } else {
 	exit;
