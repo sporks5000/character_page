@@ -9,6 +9,15 @@ $v_incdir = $v_rootdir . '/includes';
 
 require( $v_incdir . '/session.php' );
 
+$v_prot = 'http';
+if ( isset( $_SERVER['HTTPS'] ) ) {
+	$v_prot .= 's';
+} elseif ( FORCE_HTTPS ) {
+	http_response_code(301);
+	header("Location: https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
+	exit();
+}
+
 if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['user'] ) && isset( $_POST['pass'] ) ) {
 	// use the username and password from the POST data
 	$_SESSION['user'] = $_POST['user'];
@@ -21,6 +30,10 @@ if ( isset( $_SESSION['user'] ) && isset( $_SESSION['pass'] ) ) {
 
 	require( $v_incdir . '/connect.php' );
 	require( $v_incdir . '/edit_functions.php' );
+}
+
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['type'] == "logout" ) {
+	fn_log_out();
 }
 
 ?>
@@ -55,7 +68,7 @@ if ( ! isset( $_SESSION['pass'] ) ) {
 	echo 'Password: <input type="password" name="pass" id="cp_pass"><br />';
 }
 ?>
-	Object Type: <select name="type" id="type_select">
+	Object Type or Action: <select name="type" id="type_select">
 		<option value="select">Select</option>
 		<option value="name">Names</option>
 		<option value="content">Content</option>
@@ -64,6 +77,7 @@ if ( ! isset( $_SESSION['pass'] ) ) {
 		<option value="category">Categories</option>
 		<option value="document">Documents</option>
 		<option value="export">Export All</option>
+		<option value="logout">Log Out</option>
 	</select>
 	<br />
 	<input type="submit" value="Submit">

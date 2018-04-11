@@ -26,7 +26,7 @@
 				object.css('display','none');
 				object.parent().append(responseDom);
 				if ( type == "new" ) {
-					object.parent().after('<div><div class="cp_object"><li><a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' + "</a></li></div></div>\n");
+					object.parent().after('<div><div class="cp_object"><li>[<a href="new" onclick="fn_edit_object(this);return false;">CREATE NEW' + "</a>]</li></div></div>\n");
 				}
 			}
 		};

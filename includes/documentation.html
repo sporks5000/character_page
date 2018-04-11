@@ -2,7 +2,7 @@
 <style>
 	h1 {font-size:1.4em;font-weight:bold;}
 	ul, ol {padding-left:30px;margin-top:2px;}
-	pre {border:1px solid grey;padding:5px;border-radius:3px;background-color:#d8d8d8;}
+	pre {border:1px solid grey;padding:5px;border-radius:3px;background-color:#d8d8d8;white-space:pre-wrap;word-wrap:break-word;}
 	div.section {border-left:2px solid black;padding-left:20px;margin-top:30px;margin-bottom:30px;padding-top:5px;padding-bottom:5px;}
 	p.header {font-weight:bold;margin-bottom:2px;}
 	a {text-decoration-line:none;}
@@ -150,10 +150,16 @@ FLUSH PRIVILEGES;</pre>
 
 <p class="header">Directives related to how this site functions:</p>
 <ul>
-<li><b>BASE_URI</b> - The base URI for THIS site (not the <a href="#source_content">source<a/> site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; if you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"</li>
+<li><b>BASE_URI</b> - The base URI for THIS site (not the <a href="#source_content">source<a/> site). Examples: If you have this site installed at "https://www.characterpage.com/", then the BASE_URI needs to be "/"; If you have it installed at "https://www.characterpage.com/subdirectories/are/great/", the BASE_URI needs to be "/subdirectories/are/great/"</li>
 <li><b>PAGE_DIR</b> - The directory that you want individual pages to be referenced at. So, if you want the character page for page 40 of the source to be located at "https://www.characterpage.com/pages/40", you will want PAGE_DIR to be set as "pages/". In theory, this doesn't have to be a directory, for example, if you want the url to be "https://www.characterpage.com/page_40", you could set PAGE_DIR to "page_".</li>
 <li><b>LIST_DIR</b> - Same as "PAGE_DIR" above, except for list views.</li>
-<li><b>FORCE_HTTPS</b> - if this is set to "true", an HTTPS connection is forced.</li>
+<li><b>FORCE_HTTPS</b> - If this is set to "true", an HTTPS connection is forced.</li>
+<li><b>URI_STRICT</b> - If this is set to "true", the request URI will ALWAYS be interpreted as is when correlating the <a href="#source_content">source<a/> URI to a page ID. If this is set to "false", the script will try a few different variants in hopes of matching the source URI. It will almost always be best to leave this as "false". For example, with this set to "false", the following four requests will all get you to the same page:
+<ul><li>https://www.example.com/story/14</li>
+<li>https://www.example.com/story/14/</li>
+<li>https://www.example.com/story/14?awesome=true</li>
+<li>https://www.example.com/story/14/?awesome=true</li></ul>
+</li>
 </ul>
 </div>
 <div id="about_command_keywords" class="section">
@@ -590,7 +596,7 @@ Steve's just a pretty normal guy who's bad at growing facial hair
 &gt;&gt;&gt; is_prev start
 					&lt;tr&gt;
 						&lt;td style="text-align:center;margin:auto;padding-top:5px;"&gt;
-&gt;&gt;&gt; plink ⇐ prev
+&gt;&gt;&gt; plink &#8656; prev
 						&lt;/td&gt;
 					&lt;/tr&gt;
 &gt;&gt;&gt; is_prev end
@@ -632,7 +638,7 @@ Steve's just a pretty normal guy who's bad at growing facial hair
 						&lt;tr&gt;
 							&lt;td style="text-align:left;margin:auto;padding-top:5px;padding-left:15px;"&gt;
 &gt;&gt;&gt; is_prev start
-&gt;&gt;&gt; plink ⇐ prev
+&gt;&gt;&gt; plink &#8656; prev
 &gt;&gt;&gt; is_prev end
 							&lt;/td&gt;
 							&lt;td style="text-align:center;margin:auto;padding-top:5px;"&gt;
@@ -642,7 +648,7 @@ Steve's just a pretty normal guy who's bad at growing facial hair
 							&lt;/td&gt;
 							&lt;td style="text-align:right;margin:auto;padding-top:5px;padding-right:15px;"&gt;
 &gt;&gt;&gt; is_next start
-&gt;&gt;&gt; nlink next ⇒
+&gt;&gt;&gt; nlink next &#8658;
 &gt;&gt;&gt; is_next end
 							&lt;/td&gt;
 						&lt;/tr&gt;

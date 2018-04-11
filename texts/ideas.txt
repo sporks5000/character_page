@@ -1,1 +1,4 @@
-1)  Test the initialization process one last time
+1)  Allow a document to be set as the 404 page
+2)  In any case where we'd redirect to the main page, if there is a 404 page, redirect to the 404 page
+3)  If we're supposed to redirect to the main page, but there is no main page, redirect to the main page of the source.
+4)  Update the documentation to explain the above.

@@ -19,15 +19,13 @@ $v_main_page = $v_prot . '://' . $_SERVER['HTTP_HOST'] . BASE_URI;
 
 // Determine the source URI
 $v_type = '';
-$v_source_uri = '';
+$v_source_uri = preg_replace( '/(\?|&)show_parse=[12]/', '', $_SERVER['REQUEST_URI'] );
 if ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . 'single\//', $_SERVER['REQUEST_URI'] ) ) {
 	$v_type = "single";
 } elseif ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( LIST_DIR, '/' ) . '.+/', $_SERVER['REQUEST_URI'] ) ) {
 	$v_type = "list";
 } elseif ( preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( PAGE_DIR, '/' ) . '.+/', $_SERVER['REQUEST_URI'] ) ) {
 	// if the URI is constructed to match the URI of the source site
-	$v_source_uri = preg_replace( '/' . preg_quote( BASE_URI, '/' ) . preg_quote( PAGE_DIR, '/' ) . '/', '', $_SERVER['REQUEST_URI'] );
-	$v_source_uri = preg_replace( '/(\?|&)show_parse=[12]/', '', $v_source_uri );
 	$v_type = "page";
 } elseif ( preg_match( '/https?:\/\/' . preg_quote( REFERER_BASE, '/' ) . '/', $_SERVER['HTTP_REFERER'] ) && preg_match( '/^' . preg_quote( BASE_URI, '/' ) . preg_quote( PAGE_DIR, '/' ) . '/', $_SERVER['REQUEST_URI'] ) ) {
 	// If the referrer is the source, and the pages directory is target, and grab the URI of the referrer

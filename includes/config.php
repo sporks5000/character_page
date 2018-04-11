@@ -21,6 +21,8 @@ define('PAGE_DIR', 'pages/');
 define('LIST_DIR', 'lists/');
 // Should a secure connection be forced?
 define('FORCE_HTTPS', false);
+// Should the request URI always be taken as is?
+define('URI_STRICT', false);
 
 if ( $_SERVER['HTTP_HOST'] == "example.com" ) {
 	// With this, we can have multiple domains pointed at the same docroot but showing different content
